@@ -62,6 +62,7 @@
                    } elseif ($entidad['tipo_entidad'] === 'Empresa') {
                        echo "<script>console.log('Perteneces a una Empresa: " . $entidad['nombre_entidad'] . "');</script>";
                    }
+
                } else {
                    echo "<script>console.log('Entidad no encontrada para el usuario.');</script>";
                }
@@ -77,55 +78,82 @@
    }
    ?>
 <!DOCTYPE html>
-<html lang="en">
-   <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Home</title>
+<html lang="en" translate="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home</title>
       <link rel="stylesheet" href="../styles.css" />
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-      <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
-      <style>
-         body {
-         background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
-         }
-      </style>
-   </head>
-   <body>
-      <section class="home-user">
-         <nav class="navbar">
-            <div class="left">
-               <img src="../img/saludo.svg" alt="" />
-               <div>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
+      }
+        /* Estilos para el loader */
+      .loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999; /* Asegúrate de que el loader esté por encima de todo */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+    </style>
+  </head>
+  <body>
+   <!-- Loader que muestra el GIF -->
+   <div id="loader" class="loader" style="display: none;">
+      <img src="../img/loader.gif" alt="Cargando..." />
+    </div>
+
+
+    <section class="home-user">
+      <nav class="navbar">
+        <div class="left">
+          <img src="../img/saludo.svg" alt="" />
+          <div>
                   <p class="documento"><?php echo $usuario['dni']; ?></p>
                   <p class="nombre"><?php echo $usuario['nombre_apellido']; ?></p>
-               </div>
-            </div>
-            <div class="right">
+          </div>
+        </div>
+        <div class="right">
                <a href="../logout.php">
                <img src="../img/salir.svg" alt="" class="salir" />
-               </a>
-            </div>
-         </nav>
-         <div class="dinero">
-            <p class="h2">Dinero disponible</p>
+          </a>
+        </div>
+      </nav>
+      <div class="dinero">
+        <p class="h2">Dinero disponible</p>
             <p class="h1">$ <?php echo number_format($usuario['saldo'], 0, ',', '.'); ?></p>
-         </div>
-         <div class="transacciones">
-            <div onclick="window.location.href='transferir/'">
+      </div>
+      <div class="transacciones">
+            <div onclick="showLoaderAndRedirect('transferir')">
                <img src="../img/transferir.svg" alt="" />
-               <p class="hb">Transferir</p>
-            </div>
-            <div onclick="window.location.href='miqr.php'">
+          <p class="hb">Transferir</p>
+        </div>
+            <div onclick="showLoaderAndRedirect('miqr.php')">
                <img src="../img/qr.svg" alt="" />
-               <p class="hb">Tu QR</p>
-            </div>
-         </div>
-         <div class="movimientos">
-            <p class="h2">Movimientos</p>
-            <div class="container">
-               <?php if ($movimientos): ?>
+          <p class="hb">Tu QR</p>
+        </div>
+        <div>
+          <a onclick="showLoaderAndRedirect('/home-empresa.html')"><img src="../img/empresa.svg" alt="" /></a>
+          <p class="hb">Empresa</p>
+        </div>
+      </div>
+      <div class="movimientos">
+        <p class="h2">Movimientos</p>
+        <div class="movimientos-container">
+          <p class="fecha">Hoy</p>
+          <?php if ($movimientos): ?>
                <?php foreach ($movimientos as $movimiento): ?>
                <div class="movimiento">
                   <div class="left">
@@ -218,7 +246,7 @@
                   </div>
                   <div class="right">
                      <p class="h4 <?php echo ($id_columna_remitente_usuario == $id_usuario) ? 'text--minus' : 'text--plus'; ?>">
-                        <?php echo $signo . "$" . number_format(abs($movimiento['monto']), 2, ',', '.'); ?>
+                        <?php echo $signo . "$" . number_format(abs($movimiento['monto']), 0, ',', '.'); ?>
                      </p>
                      <p class="hb">
                         <?php
@@ -234,9 +262,23 @@
                   <p>No tienes movimientos todavía.</p>
                </div>
                <?php endif; ?>
+               <div class="container-btn">
+            <button class="btn-primary" onclick="window.location.href='./movimientos.html'">Historial</button>
+          </div>
             </div>
          </div>
-         <div class="background"></div>
-      </section>
-   </body>
+    </section>
+    <script>
+      function showLoaderAndRedirect(url) {
+        // Mostrar el loader
+        const loader = document.getElementById('loader');
+        loader.style.display = 'flex'; // Mostrar el loader
+
+        // Redirigir a la URL después de un pequeño retraso
+        setTimeout(function() {
+          window.location.href = url; // Redirigir a la página
+        }, 500); // Ajusta este tiempo según lo que necesites
+      }
+    </script>
+  </body>
 </html>

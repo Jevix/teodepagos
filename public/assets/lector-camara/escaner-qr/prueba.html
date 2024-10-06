@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso a la Cámara Trasera</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            margin-top: 20px;
+            display: none;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Acceso a la Cámara Trasera</h1>
+    <p>Haz clic en el botón para acceder a la cámara trasera:</p>
+
+    <!-- Botón para solicitar el acceso a la cámara -->
+    <button onclick="requestBackCameraAccess()">Acceder a la cámara trasera</button>
+
+    <!-- Video donde se mostrará el feed de la cámara -->
+    <video id="videoElement" autoplay></video>
+
+    <script>
+        function requestBackCameraAccess() {
+            // Verificar si el navegador soporta acceso a la cámara
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // Solicitar acceso a la cámara trasera
+                navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { exact: "environment" } }  // "environment" para la cámara trasera
+                })
+                .then(function(stream) {
+                    // Mostrar el video en el elemento <video>
+                    var videoElement = document.getElementById("videoElement");
+                    videoElement.srcObject = stream;
+                    videoElement.style.display = "block"; // Mostrar el video cuando se otorgue el acceso
+                    
+                    // Redirigir a otra página después de conceder el acceso
+                    setTimeout(function() {
+                        window.location.href = "basico.html";  // Cambiar la URL por la de tu página
+                    }, 2000); // Redirigir después de 2 segundos (opcional)
+                })
+                .catch(function(error) {
+                    console.log("Error al acceder a la cámara trasera: ", error);
+                    alert("No se pudo acceder a la cámara trasera. Por favor, asegúrate de que tu navegador tenga permisos.");
+                });
+            } else {
+                alert("Tu navegador no soporta acceso a la cámara.");
+            }
+        }
+    </script>
+
+</body>
+</html>

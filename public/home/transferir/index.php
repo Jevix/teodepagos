@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -25,7 +26,7 @@
         </a>
         <p class="h2">Transferir</p>
       </nav>
-      <div class="btn-container">
+      <div class="container">
         <button
           class="btn-primary"
           onclick="window.location.href='buscar_usuario.php'"
@@ -36,7 +37,7 @@
           Escanear QR <img src="../../img/qr-white.svg" alt="" />
         </button>
       </div>
-      <div class="background"></div>
+      <!-- <div class="background"></div> -->
     </section>
   </body>
 </html>
