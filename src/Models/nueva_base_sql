@@ -1,0 +1,96 @@
+-- Borrar tablas si ya existen
+DROP TABLE IF EXISTS movimientos_saldo;
+DROP TABLE IF EXISTS usuarios;
+DROP TABLE IF EXISTS entidades;
+
+-- Crear tabla entidades
+CREATE TABLE entidades (
+    id_entidad INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_entidad VARCHAR(50) NOT NULL,
+    cuit VARCHAR(11) NOT NULL UNIQUE,
+    tipo_entidad ENUM('Empresa', 'Banco') NOT NULL, -- La entidad puede ser empresa o banco
+    saldo DECIMAL(10,2) DEFAULT 0 CHECK (saldo >= 0)
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Crear tabla usuarios con referencia a entidades
+CREATE TABLE usuarios (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_apellido VARCHAR(40) NOT NULL,
+    dni VARCHAR(8) UNIQUE NOT NULL,
+    password VARCHAR(8) NOT NULL, -- Contraseñas sin cifrar, ddmmaaaa
+    tipo_usuario ENUM('Usuario', 'Miembro') NOT NULL, -- Solo diferenciamos entre Usuario y Miembro
+    id_entidad INT DEFAULT NULL, -- Clave foránea hacia la tabla entidades
+    saldo DECIMAL(10,2) DEFAULT 0 CHECK (saldo >= 0),
+    CONSTRAINT chk_id_entidad CHECK (
+        (tipo_usuario = 'Usuario' AND id_entidad IS NULL) OR 
+        (tipo_usuario = 'Miembro' AND id_entidad IS NOT NULL)
+    ),
+    FOREIGN KEY (id_entidad) REFERENCES entidades(id_entidad) ON DELETE SET NULL
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Crear tabla movimientos_saldo
+CREATE TABLE movimientos_saldo (
+    id_transaccion INT AUTO_INCREMENT PRIMARY KEY,
+    id_remitente_usuario INT DEFAULT NULL,
+    id_remitente_entidad INT DEFAULT NULL,
+    monto DECIMAL(10,2) NOT NULL CHECK (monto >= 1),
+    tipo_movimiento ENUM('Ingreso', 'Egreso', 'Prestamo','Recarga') NOT NULL,
+    id_destinatario_usuario INT DEFAULT NULL,
+    id_destinatario_entidad INT DEFAULT NULL,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_remitente_usuario) REFERENCES usuarios(id_usuario),
+    FOREIGN KEY (id_remitente_entidad) REFERENCES entidades(id_entidad),
+    FOREIGN KEY (id_destinatario_usuario) REFERENCES usuarios(id_usuario),
+    FOREIGN KEY (id_destinatario_entidad) REFERENCES entidades(id_entidad)
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Establecer el valor inicial del AUTO_INCREMENT
+ALTER TABLE movimientos_saldo AUTO_INCREMENT = 31415;
+
+
+-- Trigger para validar CUIT
+DELIMITER $$
+CREATE TRIGGER validar_cuit
+BEFORE INSERT ON entidades
+FOR EACH ROW
+BEGIN
+    IF CHAR_LENGTH(NEW.cuit) != 11 OR NEW.cuit NOT REGEXP '^[0-9]+$' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'CUIT debe tener 11 dígitos y contener solo números';
+    END IF;
+END $$
+DELIMITER ;
+
+
+-- Trigger para validar Dni
+DELIMITER $$
+CREATE TRIGGER validar_dni
+BEFORE INSERT ON usuarios
+FOR EACH ROW
+BEGIN
+    IF CHAR_LENGTH(NEW.dni) != 8 OR NEW.dni NOT REGEXP '^[0-9]+$' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'DNI debe tener 8 dígitos y contener solo números';
+    END IF;
+END $$
+DELIMITER ;
+
+
+
+INSERT INTO usuarios (nombre_apellido, dni, password, tipo_usuario, saldo) 
+VALUES ('Javier Caceres', '42926423', '3595', 'Usuario', 10000.00);
+
+INSERT INTO usuarios (nombre_apellido, dni, password, tipo_usuario, saldo) 
+VALUES ('Nahuel Croco', '43992532', '12052002', 'Usuario', 10000.00);
+
+INSERT INTO usuarios (nombre_apellido, dni, password, tipo_usuario, saldo) 
+VALUES ('Nahuel Andrade', '44429156', '12112002', 'Usuario', 10000.00);
+
+
+-- Insertar Empresa 1
+INSERT INTO entidades (nombre_entidad, cuit, tipo_entidad, saldo)
+VALUES ('TechCorp S.A.', '20345678901', 'Empresa', 10000.00);
+
+-- Insertar Empresa 2
+INSERT INTO entidades (nombre_entidad, cuit, tipo_entidad, saldo)
+VALUES ('FinancePro Ltd.', '20456789012', 'Empresa', 25000.50);
+

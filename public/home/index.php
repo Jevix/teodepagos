@@ -1,9 +1,10 @@
 <?php
    session_start();
-   if (!isset($_SESSION['id_usuario'])) {
-       header('Location: login/');  // Redirigir a la página de login si no está autenticado
+   if (!isset($_SESSION['id_usuario']) ) {
+       header('Location: ../login');  // Redirigir a la página de login si no está autenticado
        exit;
    }
+
    if (isset($_SESSION['tipo_usuario'])) {
        // Obtener el id_usuario de la sesión
        $id_usuario = $_SESSION['id_usuario'];
@@ -57,10 +58,15 @@
    
                if ($entidad) {
                    if ($entidad['tipo_entidad'] === 'Banco') {
-                       header('Location: bancos.php');
+                      $_SESSION['id_entidad'] = $entidad['id_entidad'];
+                      $_SESSION['nombre_entidad'] = $entidad['nombre_entidad'];
+                      $_SESSION['tipo_entidad'] = $entidad['tipo_entidad'];
+                       header('Location: home_entidad/');
                        exit;
                    } elseif ($entidad['tipo_entidad'] === 'Empresa') {
-                       echo "<script>console.log('Perteneces a una Empresa: " . $entidad['nombre_entidad'] . "');</script>";
+                    $_SESSION['id_entidad'] = $entidad['id_entidad'];
+                    $_SESSION['nombre_entidad'] = $entidad['nombre_entidad'];
+                    $_SESSION['tipo_entidad'] = $entidad['tipo_entidad'];
                    }
 
                } else {
@@ -144,10 +150,12 @@
                <img src="../img/qr.svg" alt="" />
           <p class="hb">Tu QR</p>
         </div>
-        <div>
-          <a onclick="showLoaderAndRedirect('/home-empresa.html')"><img src="../img/empresa.svg" alt="" /></a>
-          <p class="hb">Empresa</p>
-        </div>
+              <div <?php echo (!empty($entidad) && $entidad['tipo_entidad'] === 'Empresa') ? '' : 'style="display: none;"'; ?>>
+        <a onclick="showLoaderAndRedirect('home_entidad/')">
+          <img src="../img/empresa.svg" alt="" />
+        </a>
+        <p class="hb">Empresa</p>
+      </div>
       </div>
       <div class="movimientos">
         <p class="h2">Movimientos</p>

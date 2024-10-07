@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Buscar usuario</title>
-    <link rel="stylesheet" href="../../styles.css" />
+    <link rel="stylesheet" href="../../../styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
@@ -19,7 +19,7 @@
 <section class="buscar-usuario">
     <nav class="navbar">
         <a href="./index.php">
-            <img src="../../img/back.svg" alt="" />
+            <img src="../../../img/back.svg" alt="" />
         </a>
         <p class="h2">Transferir</p>
     </nav>
@@ -75,8 +75,8 @@ function performSearch() {
     }
 
     $.ajax({
-        url: "/teodepagos/public/home/transferir/buscar_usuario_logica.php", 
-        type: "GET",
+        url: "buscar_usuario_logica.php", 
+        type: "get",
         data: { Dni_Nombre: dniNombre },
         dataType: "json",
         success: function(data) {
@@ -89,7 +89,7 @@ function performSearch() {
                 data.usuarios.forEach(usuario => {
                     const usuarioHtml = `
                         <div class="transferencia corto" onclick="window.location.href='procesar_transferencia.php?dni=${usuario.dni}'">
-                        <img src="../../img/user.svg" alt="Banco" />
+                        <img src="../../../img/user.svg" alt="Banco" />
                             <div class="left">
                                 <div>
                                     <p class="h5">${usuario.nombre_apellido}</p>
@@ -107,7 +107,7 @@ function performSearch() {
                     const entidadHtml = `
                         <div class="transferencia" onclick="window.location.href='procesar_transferencia.php?cuit=${entidad.cuit}'"> 
                             <div class="left">
-                                <img src="../img/company.svg" alt="" />
+                                <img src="../../img/company.svg" alt="" />
                                 <div>
                                     <p class="h5">${entidad.nombre_entidad}</p>
                                     <p class="hb">CUIT: ${entidad.cuit}</p>
