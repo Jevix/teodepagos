@@ -115,16 +115,30 @@ $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <p class="h1">$ <?php echo number_format($entidad['saldo'], 0, ',', '.'); ?></p>
       </div>
       <div class="transacciones">
+    <?php if ($entidad['tipo_entidad'] === 'Banco'): ?>
+        <div onclick="showLoaderAndRedirect('cuentas.php')">
+            <img src="../../img/account_1.svg" alt="Cuentas" />
+            <p class="hb">Cuentas</p>
+        </div>
+        <div onclick="showLoaderAndRedirect('agregar.php')">
+            <img src="../../img/agregar_usuario.svg" alt="Agregar" />
+            <p class="hb">Agregar</p>
+        </div>
+        <div onclick="showLoaderAndRedirect('transferir/buscar_usuario_encontrado_banco.php')">
+            <img src="../../img/emitir.svg" alt="Emitir Dinero" />
+            <p class="hb">Emitir Dinero</p>
+        </div>
+    <?php elseif ($entidad['tipo_entidad'] === 'Empresa'): ?>
         <div onclick="showLoaderAndRedirect('transferir')">
-           <img src="../../img/transferir.svg" alt="" />
-          <p class="hb">Transferir</p>
+            <img src="../../img/transferir.svg" alt="Transferir" />
+            <p class="hb">Transferir</p>
         </div>
         <div onclick="showLoaderAndRedirect('miqr.php')">
-           <img src="../../img/qr.svg" alt="" />
-          <p class="hb">Tu QR</p>
+            <img src="../../img/qr.svg" alt="Tu QR" />
+            <p class="hb">Tu QR</p>
         </div>
-        <!-- Mostrar botón de Empresa si el usuario pertenece a una entidad de tipo 'Empresa' -->
-      </div>
+    <?php endif; ?>
+</div>
       <div class="movimientos">
         <p class="h2">Movimientos</p>
         <div class="movimientos-container">

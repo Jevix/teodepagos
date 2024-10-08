@@ -1,9 +1,26 @@
 <?php
 session_start();
 
-// Si la sesión está activa, redirigir al home
-if (isset($_SESSION['usuario'])) {
-    header('Location: ../home.php');
+// Si la sesión está activa o la cookie existe, redirigir al home
+if (isset($_SESSION['id_usuario'])) {
+    header('Location: ../home');
+    exit;
+}
+
+// Si la cookie 'remember_me' existe, restaurar la sesión desde la cookie
+if (isset($_COOKIE['remember_me'])) {
+    $user_data = json_decode($_COOKIE['remember_me'], true);
+    
+    // Restaurar los datos de la sesión desde la cookie
+    $_SESSION['id_usuario'] = $user_data['id_usuario'];
+    $_SESSION['tipo_usuario'] = $user_data['tipo_usuario'];
+    
+    if (isset($user_data['id_entidad'])) {
+        $_SESSION['id_entidad'] = $user_data['id_entidad'];
+    }
+
+    // Redirigir al home directamente
+    header('Location: ../home');
     exit;
 }
 
@@ -51,6 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Almacenar el tipo de usuario
             $_SESSION['tipo_usuario'] = $user['tipo_usuario'];
 
+            // Crear una cookie para recordar al usuario, se almacena por 30 días
+            $user_data = json_encode([
+                'id_usuario' => $user['id_usuario'],
+                'tipo_usuario' => $user['tipo_usuario'],
+                'id_entidad' => isset($user['id_entidad']) ? $user['id_entidad'] : null
+            ]);
+            setcookie('remember_me', $user_data, time() + (30 * 24 * 60 * 60), "/"); // 30 días
+
             // Redirigir al home con retraso para simular la espera
             echo "<script>
                     setTimeout(function() {
@@ -94,23 +119,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         align-items: center;
       }
 
-      .loader::before {
-        content: "";
-        width: 50px; /* Ajusta el tamaño del círculo */
-        height: 50px;
-        border: 5px solid #f3f3f3; /* Color del borde */
-        border-top: 5px solid #3498db; /* Color del borde superior (giratorio) */
-        border-radius: 50%;
-        animation: spin 1s linear infinite; /* Animación de giro */
-      }
-
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
+      /* Reemplazar la animación CSS con una imagen GIF */
+      .loader img {
+        width: 100px; /* Ajusta el tamaño del GIF */
+        height: 100px;
       }
 
       /* Difuminar fondo cuando el loader está visible */
@@ -123,8 +135,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <body>
 
     <section class="login">
-      <!-- Loader con el círculo animado, sin img innecesaria -->
-      <div id="loader" class="loader" style="display: none;"></div>
+      <!-- Loader con el GIF -->
+      <div id="loader" class="loader" style="display: none;">
+        <img src="../img/loader.gif" alt="Cargando..." />
+      </div>
 
       <!-- Contenido que no será afectado por el blur -->
       <img src="../img/logo.png" alt="Logo" />

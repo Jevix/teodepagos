@@ -104,10 +104,31 @@ if (empty($dni) && empty($cuit)) {
       body {
         background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
       }
+      .loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999; /* Asegúrate de que el loader esté por encima de todo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.7); /* Fondo semitransparente para mejorar la visibilidad */
+}
+
+.loader img {
+  width: 100px; /* Ajusta el tamaño según sea necesario */
+  height: 100px;
+}
     </style>
   </head>
   <body>
+  <div id="loader" class="loader" style="display: none;">
+  <img src="../../img/loader.gif" alt="Cargando..." />
+</div>
     <section class="transferir-user">
+    
       <nav class="navbar">
         <a href="buscar_usuario.php">
           <img src="../../img/back.svg" alt="Back" />
@@ -161,6 +182,8 @@ if (empty($dni) && empty($cuit)) {
         <button class="btn-primary submit--on" id="submitButton" onclick="transferir()">
           Transferir
         </button>
+        
+
       </div>
     </section>
 
@@ -209,43 +232,53 @@ if (empty($dni) && empty($cuit)) {
       }
 
       function transferir() {
-        const monto = display.textContent.replace(/\./g, ''); // Eliminar puntos del monto
-        const urlParams = new URLSearchParams(window.location.search);
-        const dni = urlParams.get('dni') || '';
-        const cuit = urlParams.get('cuit') || '';
+    const display = document.getElementById("display");
+    const loader = document.getElementById("loader");
 
-        // Crear un formulario dinámicamente para enviar los datos mediante POST
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = 'logica_transferencia.php'; // Cambia a .php si necesitas procesar datos en PHP
+    const monto = display.textContent.replace(/\./g, ''); // Eliminar puntos del monto
+    const urlParams = new URLSearchParams(window.location.search);
+    const dni = urlParams.get('dni') || '';
+    const cuit = urlParams.get('cuit') || '';
 
-        // Crear campos ocultos para el monto, DNI y CUIT
-        const montoField = document.createElement('input');
-        montoField.type = 'hidden';
-        montoField.name = 'monto';
-        montoField.value = monto;
-        form.appendChild(montoField);
+    // Mostrar el loader
+    loader.style.display = "flex";
 
-        if (dni) {
-            const dniField = document.createElement('input');
-            dniField.type = 'hidden';
-            dniField.name = 'dni';
-            dniField.value = dni;
-            form.appendChild(dniField);
-        }
+    // Crear un formulario dinámicamente para enviar los datos mediante POST
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'logica_transferencia.php'; // Cambia a .php si necesitas procesar datos en PHP
 
-        if (cuit) {
-            const cuitField = document.createElement('input');
-            cuitField.type = 'hidden';
-            cuitField.name = 'cuit';
-            cuitField.value = cuit;
-            form.appendChild(cuitField);
-        }
+    // Crear campos ocultos para el monto, DNI y CUIT
+    const montoField = document.createElement('input');
+    montoField.type = 'hidden';
+    montoField.name = 'monto';
+    montoField.value = monto;
+    form.appendChild(montoField);
 
-        // Agregar el formulario al documento y enviarlo
-        document.body.appendChild(form);
-        form.submit();
-      }
+    if (dni) {
+        const dniField = document.createElement('input');
+        dniField.type = 'hidden';
+        dniField.name = 'dni';
+        dniField.value = dni;
+        form.appendChild(dniField);
+    }
+
+    if (cuit) {
+        const cuitField = document.createElement('input');
+        cuitField.type = 'hidden';
+        cuitField.name = 'cuit';
+        cuitField.value = cuit;
+        form.appendChild(cuitField);
+    }
+
+    // Agregar el formulario al documento y enviarlo
+    document.body.appendChild(form);
+
+    // Simular un retardo para que el loader se vea durante 2 segundos
+    setTimeout(() => {
+        form.submit(); // Enviar el formulario después del retardo
+    }, 2000); // Puedes ajustar el tiempo de la simulación de carga
+}
 
     </script>
 

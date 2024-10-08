@@ -46,7 +46,6 @@ if (isset($_SESSION['tipo_usuario'])) {
         LEFT JOIN entidades AS destinatario_entidad ON ms.id_destinatario_entidad = destinatario_entidad.id_entidad
         WHERE ms.id_remitente_usuario = :id_usuario OR ms.id_destinatario_usuario = :id_usuario
         ORDER BY ms.fecha DESC
-        LIMIT 5
         ");
 
         $stmt->execute(['id_usuario' => $id_usuario]);
@@ -92,12 +91,12 @@ if (isset($_SESSION['tipo_usuario'])) {
 
 ?>
 <!DOCTYPE html>
-<html lang="en" translate="no">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Home</title>
-      <link rel="stylesheet" href="../styles.css" />
+    <title>Transferir</title>
+    <link rel="stylesheet" href="../styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -108,65 +107,19 @@ if (isset($_SESSION['tipo_usuario'])) {
       body {
         background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
       }
-        /* Estilos para el loader */
-      .loader {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 9999; /* Asegúrate de que el loader esté por encima de todo */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
     </style>
   </head>
   <body>
-   <!-- Loader que muestra el GIF -->
-   <div id="loader" class="loader" style="display: none;">
-      <img src="../img/loader.gif" alt="Cargando..." />
-    </div>
-
-
-    <section class="home-user">
+    <section class="transferir-user">
       <nav class="navbar">
-        <div class="left">
-          <img src="../img/saludo.svg" alt="" />
-          <div>
-                  <p class="documento"><?php echo $usuario['dni']; ?></p>
-                  <p class="nombre"><?php echo $usuario['nombre_apellido']; ?></p>
-          </div>
-        </div>
-        <div class="right">
-               <a href="../logout.php">
-               <img src="../img/salir.svg" alt="" class="salir" />
-          </a>
-        </div>
-      </nav>
-      <div class="dinero">
-        <p class="h2">Dinero disponible</p>
-            <p class="h1">$ <?php echo number_format($usuario['saldo'], 0, ',', '.'); ?></p>
-      </div>
-      <div class="transacciones">
-            <div onclick="showLoaderAndRedirect('transferir')">
-               <img src="../img/transferir.svg" alt="" />
-          <p class="hb">Transferir</p>
-        </div>
-            <div onclick="showLoaderAndRedirect('miqr.php')">
-               <img src="../img/qr.svg" alt="" />
-          <p class="hb">Tu QR</p>
-        </div>
-              <div <?php echo (!empty($entidad) && $entidad['tipo_entidad'] === 'Empresa') ? '' : 'style="display: none;"'; ?>>
-        <a onclick="showLoaderAndRedirect('home_entidad/')">
-          <img src="../img/empresa.svg" alt="" />
+        <a href="../index.php">
+          <img src="../img/back.svg" alt="" />
         </a>
-        <p class="hb">Empresa</p>
-      </div>
-      </div>
-      <div class="movimientos">
         <p class="h2">Movimientos</p>
+      </nav>
+      <div class="container">
+      <div class="movimientos">
+        <p class="h2"></p>
         <div class="movimientos-container">
           <p class="fecha">Hoy</p>
           <?php if ($movimientos): ?>
@@ -279,22 +232,12 @@ if (isset($_SESSION['tipo_usuario'])) {
                </div>
                <?php endif; ?>
                <div class="container-btn">
-            <button class="btn-primary" onclick="window.location.href='./movimientos.php'">Historial</button>
           </div>
             </div>
          </div>
     </section>
-    <script>
-      function showLoaderAndRedirect(url) {
-        // Mostrar el loader
-        const loader = document.getElementById('loader');
-        loader.style.display = 'flex'; // Mostrar el loader
-
-        // Redirigir a la URL después de un pequeño retraso
-        setTimeout(function() {
-          window.location.href = url; // Redirigir a la página
-        }, 500); // Ajusta este tiempo según lo que necesites
-      }
-    </script>
+      </div>
+      <!-- <div class="background"></div> -->
+    </section>
   </body>
 </html>

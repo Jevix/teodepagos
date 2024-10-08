@@ -1,17 +1,17 @@
 <?php
 session_start();
-if (!isset($_SESSION['id_usuario'])) {
-    header('Location: ../../login');
+if (!isset($_SESSION['id_entidad'])) {
+    header('Location: ../../../login');
 }
-?>
 
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Buscar usuario</title>
-    <link rel="stylesheet" href="../../styles.css" />
+    <link rel="stylesheet" href="../../../styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
@@ -20,13 +20,18 @@ if (!isset($_SESSION['id_usuario'])) {
         body {
             background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
         }
+        .buscar-usuario .container-anteriores {
+
+            padding: 0 !important;
+            
+        }
     </style>
 </head>
 <body>
 <section class="buscar-usuario">
     <nav class="navbar">
-        <a href="./index.php">
-            <img src="../../img/back.svg" alt="" />
+        <a href="../../index.php">
+            <img src="../../../img/back.svg" alt="" />
         </a>
         <p class="h2">Transferir</p>
     </nav>
@@ -48,6 +53,7 @@ if (!isset($_SESSION['id_usuario'])) {
                 Buscar cuenta
             </button>
         </form>
+        <p> El dinero emitido por los bancos no se les es descontado del total de sus cajas.</p>
     </div>
 </section>
 <script>
@@ -82,20 +88,21 @@ function performSearch() {
     }
 
     $.ajax({
-        url: "/teodepagos/public/home/transferir/buscar_usuario_logica.php", 
-        type: "GET",
+        url: "buscar_usuario_logica.php", 
+        type: "get",
         data: { Dni_Nombre: dniNombre },
         dataType: "json",
         success: function(data) {
             console.log("Datos recibidos:", data);
             const containerAnteriores = $("#container-anteriores");
             containerAnteriores.empty(); 
+            containerAnteriores.append('<p class="h2">Anteriores transferencias</p>');
 
             if (data.usuarios.length > 0 || data.entidades.length > 0) {
                 data.usuarios.forEach(usuario => {
                     const usuarioHtml = `
                         <div class="transferencia corto" onclick="window.location.href='procesar_transferencia.php?dni=${usuario.dni}'">
-                        <img src="../../img/user.svg" alt="Banco" />
+                        <img src="../../../img/user.svg" alt="Banco" />
                             <div class="left">
                                 <div>
                                     <p class="h5">${usuario.nombre_apellido}</p>
@@ -113,7 +120,7 @@ function performSearch() {
                     const entidadHtml = `
                         <div class="transferencia" onclick="window.location.href='procesar_transferencia.php?cuit=${entidad.cuit}'"> 
                             <div class="left">
-                                <img src="../img/company.svg" alt="" />
+                                <img src="../../img/company.svg" alt="" />
                                 <div>
                                     <p class="h5">${entidad.nombre_entidad}</p>
                                     <p class="hb">CUIT: ${entidad.cuit}</p>

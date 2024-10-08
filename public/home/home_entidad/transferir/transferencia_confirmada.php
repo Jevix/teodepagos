@@ -1,4 +1,9 @@
 <?php
+// Verificar si se ha iniciado sesión
+if (!isset($_SESSION['id_entidad'])) {
+    header('Location: ../../../login');
+    exit;
+}
 // Verificar si se ha pasado el monto y el nombre del destinatario
 if (!isset($_GET['monto']) || (!isset($_GET['dni']) && !isset($_GET['cuit'])) || !isset($_GET['fecha'])) {
     die("Faltan datos para completar la confirmación de la transferencia.");

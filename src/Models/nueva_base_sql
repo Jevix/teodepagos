@@ -9,7 +9,7 @@ CREATE TABLE entidades (
     nombre_entidad VARCHAR(50) NOT NULL,
     cuit VARCHAR(11) NOT NULL UNIQUE,
     tipo_entidad ENUM('Empresa', 'Banco') NOT NULL, -- La entidad puede ser empresa o banco
-    saldo DECIMAL(10,2) DEFAULT 0 CHECK (saldo >= 0)
+    saldo DECIMAL(10,0) DEFAULT 0 CHECK (saldo >= 0)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Crear tabla usuarios con referencia a entidades
@@ -20,7 +20,7 @@ CREATE TABLE usuarios (
     password VARCHAR(8) NOT NULL, -- Contraseñas sin cifrar, ddmmaaaa
     tipo_usuario ENUM('Usuario', 'Miembro') NOT NULL, -- Solo diferenciamos entre Usuario y Miembro
     id_entidad INT DEFAULT NULL, -- Clave foránea hacia la tabla entidades
-    saldo DECIMAL(10,2) DEFAULT 0 CHECK (saldo >= 0),
+    saldo DECIMAL(10,0) DEFAULT 0 CHECK (saldo >= 0),
     CONSTRAINT chk_id_entidad CHECK (
         (tipo_usuario = 'Usuario' AND id_entidad IS NULL) OR 
         (tipo_usuario = 'Miembro' AND id_entidad IS NOT NULL)

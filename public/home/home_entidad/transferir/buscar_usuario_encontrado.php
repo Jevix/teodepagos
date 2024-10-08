@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['id_entidad'])) {
+    header('Location: ../../../login');
+}
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
