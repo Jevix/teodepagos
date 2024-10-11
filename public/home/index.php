@@ -46,7 +46,7 @@ if (isset($_SESSION['tipo_usuario'])) {
         LEFT JOIN entidades AS destinatario_entidad ON ms.id_destinatario_entidad = destinatario_entidad.id_entidad
         WHERE ms.id_remitente_usuario = :id_usuario OR ms.id_destinatario_usuario = :id_usuario
         ORDER BY ms.fecha DESC
-        LIMIT 5
+        LIMIT 3
         ");
 
         $stmt->execute(['id_usuario' => $id_usuario]);
@@ -160,7 +160,7 @@ if (isset($_SESSION['tipo_usuario'])) {
         </div>
               <div <?php echo (!empty($entidad) && $entidad['tipo_entidad'] === 'Empresa') ? '' : 'style="display: none;"'; ?>>
         <a onclick="showLoaderAndRedirect('home_entidad/')">
-          <img src="../img/empresa.svg" alt="" />
+          <img src="../img/empresa-black.svg" alt="" />
         </a>
         <p class="hb">Empresa</p>
       </div>
@@ -283,6 +283,7 @@ if (isset($_SESSION['tipo_usuario'])) {
           </div>
             </div>
          </div>
+         <div class="background"></div>
     </section>
     <script>
       function showLoaderAndRedirect(url) {

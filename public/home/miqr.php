@@ -60,29 +60,28 @@ $codigoQR = $generator->render_svg('qr', $dni, $options); // Usar el DNI para el
     </style>
   </head>
   <body>
-    <section class="transferir-user tu-qr">
+    <section class="main">
       <nav class="navbar">
         <a href="index.php">
           <img src="../img/back.svg" alt="Volver" />
         </a>
         <p class="h2">Tu QR</p>
       </nav>
-      <div class="container">
-        <div class="container-1">
-          <div class="qr-placeholder">
-            <?php echo $codigoQR; // Mostrar el código QR generado ?>
+      <div class="container-white container-tuqr">
+        <div class="container-tuqr-1">
+          <?php echo $codigoQR; // Mostrar el código QR generado ?>
+        </div>
+        <div class="container-datos">
+          <div class="datos-transferencia">
+            <p class="h2 text--light left">Nombre</p>
+            <p class="h2 text--darkblue right"><?php echo htmlspecialchars($nombre_apellido); ?></p>
+          </div>
+          <div class="datos-transferencia">
+            <p class="h2 text--light left">DNI</p>
+            <p class="h2 text--darkblue right"><?php echo htmlspecialchars($dni); ?></p>
           </div>
         </div>
-        <div class="container-2">
-            <div class="detalles-user">
-                <p class="h2 text--light">Nombre Completo</p>
-                <p class="h2 text--darkblue"><?php echo htmlspecialchars($nombre_apellido); ?></p>
-            </div>
-            <div class="detalles-user">
-                <p class="h2 text--light">DNI</p>
-                <p class="h2 text--darkblue"><?php echo htmlspecialchars($dni); ?></p>
-            </div>
-        </div>
+        <div class="background"></div>
       </div>
     </section>
   </body>

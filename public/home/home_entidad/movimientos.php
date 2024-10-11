@@ -7,63 +7,59 @@ session_set_cookie_params($session_lifetime);
 session_start();
 
 // Si la sesión no está activa, redirigir al login
-if (!isset($_SESSION['id_usuario'])) {
+if (!isset($_SESSION['id_entidad'])) {
     header('Location: ../login');  // Redirigir a la página de login si no está autenticado
     exit;
 }
 
-if (isset($_SESSION['tipo_usuario'])) {
-    // Obtener el id_usuario de la sesión
-    $id_usuario = $_SESSION['id_usuario'];
-    $tipo_usuario = $_SESSION['tipo_usuario'];  // Tipo de usuario
+if (isset($_SESSION['id_entidad'])) {
+    // Obtener el id_entidad de la sesión
+    $id_entidad = $_SESSION['id_entidad'];
 
     // Conectar a la base de datos
-    require '../../src/Models/Database.php';
-    $config = require '../../config/config.php';
+    require '../../../src/Models/Database.php';
+    $config = require '../../../config/config.php';
     $db = new Database($config['db_host'], $config['db_name'], $config['db_user'], $config['db_pass']);
     $pdo = $db->getConnection();
 
-    // Consultar la tabla usuarios para obtener más información
-    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id_usuario = :id_usuario");
-    $stmt->execute(['id_usuario' => $id_usuario]);
-    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Consultar la tabla entidades para obtener más información
+    $stmt = $pdo->prepare("SELECT * FROM entidades WHERE id_entidad = :id_entidad");
+    $stmt->execute(['id_entidad' => $id_entidad]);
+    $entidad = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($usuario) {
+    if ($entidad) {
         // Consultar los movimientos de saldo
         $stmt = $pdo->prepare("
         SELECT ms.*, 
-               remitente.nombre_apellido AS remitente_nombre_apellido, 
-               destinatario.nombre_apellido AS destinatario_nombre_apellido, 
-               remitente_entidad.nombre_entidad AS remitente_nombre_entidad,
-               destinatario_entidad.nombre_entidad AS destinatario_nombre_entidad,
+               COALESCE(remitente_entidad.nombre_entidad, remitente.nombre_apellido) AS remitente_nombre,
+               COALESCE(destinatario_entidad.nombre_entidad, destinatario.nombre_apellido) AS destinatario_nombre,
                remitente_entidad.tipo_entidad AS remitente_tipo_entidad,
                destinatario_entidad.tipo_entidad AS destinatario_tipo_entidad
         FROM movimientos_saldo ms
-        LEFT JOIN usuarios AS remitente ON ms.id_remitente_usuario = remitente.id_usuario
-        LEFT JOIN usuarios AS destinatario ON ms.id_destinatario_usuario = destinatario.id_usuario
         LEFT JOIN entidades AS remitente_entidad ON ms.id_remitente_entidad = remitente_entidad.id_entidad
+        LEFT JOIN usuarios AS remitente ON ms.id_remitente_usuario = remitente.id_usuario
         LEFT JOIN entidades AS destinatario_entidad ON ms.id_destinatario_entidad = destinatario_entidad.id_entidad
-        WHERE ms.id_remitente_usuario = :id_usuario OR ms.id_destinatario_usuario = :id_usuario
+        LEFT JOIN usuarios AS destinatario ON ms.id_destinatario_usuario = destinatario.id_usuario
+        WHERE ms.id_remitente_entidad = :id_entidad OR ms.id_destinatario_entidad = :id_entidad
         ORDER BY ms.fecha DESC
         ");
-
-        $stmt->execute(['id_usuario' => $id_usuario]);
+        $stmt->execute(['id_entidad' => $id_entidad]);
         $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        } else {
-            echo "<script>console.log('Usuario no encontrado');</script>";
-        }
     } else {
-        echo "<script>console.log('Usuario no encontrado');</script>";
+        echo "<script>console.log('Entidad no encontrada');</script>";
     }
+} else {
+    header('Location: ../login.php');
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Transferir</title>
-    <link rel="stylesheet" href="../styles.css" />
+    <title>Movimientos</title>
+    <link rel="stylesheet" href="../../styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -79,8 +75,8 @@ if (isset($_SESSION['tipo_usuario'])) {
   <body>
     <section class="main movimientos">
       <nav class="navbar">
-        <a href="../index.php">
-          <img src="../img/back.svg" alt="" />
+        <a href="index.php">
+          <img src="../../img/back.svg" alt="" />
         </a>
         <p class="h2">Movimientos</p>
       </nav>
@@ -95,13 +91,13 @@ if (isset($_SESSION['tipo_usuario'])) {
                 <div class="left">
                   <?php
                     // Definir el ícono de la entidad
-                    $img_src = '../img/user.svg';
+                    $img_src = '../../img/user.svg';
                     if ($movimiento['tipo_movimiento'] == 'Prestamo' || $movimiento['tipo_movimiento'] == 'Recarga') {
-                        $img_src = '../img/bank.svg';
+                        $img_src = '../../img/bank.svg';
                     } elseif ($movimiento['destinatario_tipo_entidad'] == 'Banco' || $movimiento['remitente_tipo_entidad'] == 'Banco') {
-                        $img_src = '../img/bank.svg';
+                        $img_src = '../../img/bank.svg';
                     } elseif ($movimiento['destinatario_tipo_entidad'] == 'Empresa' || $movimiento['remitente_tipo_entidad'] == 'Empresa') {
-                        $img_src = '../img/company.svg';
+                        $img_src = '../../img/company.svg';
                     }
                   ?>
                   <img src="<?php echo htmlspecialchars($img_src); ?>" alt="Entidad" />
@@ -110,18 +106,18 @@ if (isset($_SESSION['tipo_usuario'])) {
                   <div class="arriba">
                     <p class="h5">
                       <?php
-                        // Mostrar el nombre del remitente o destinatario dependiendo del usuario
-                        if ($movimiento['id_remitente_usuario'] == $id_usuario) {
-                            echo htmlspecialchars($movimiento['destinatario_nombre_apellido'] ?: $movimiento['destinatario_nombre_entidad']);
+                        // Mostrar el nombre del remitente o destinatario dependiendo de la entidad
+                        if ($movimiento['id_remitente_entidad'] == $id_entidad) {
+                            echo htmlspecialchars($movimiento['destinatario_nombre']);
                         } else {
-                            echo htmlspecialchars($movimiento['remitente_nombre_apellido'] ?: $movimiento['remitente_nombre_entidad']);
+                            echo htmlspecialchars($movimiento['remitente_nombre']);
                         }
                       ?>
                     </p>
-                    <p class="h4 <?php echo ($movimiento['id_remitente_usuario'] == $id_usuario) ? 'text--minus' : 'text--plus'; ?>">
+                    <p class="h4 <?php echo ($movimiento['id_remitente_entidad'] == $id_entidad) ? 'text--minus' : 'text--plus'; ?>">
                       <?php
                         // Mostrar monto con formato
-                        $signo = ($movimiento['id_remitente_usuario'] == $id_usuario) ? '-' : '+';
+                        $signo = ($movimiento['id_remitente_entidad'] == $id_entidad) ? '-' : '+';
                         echo $signo . "$" . number_format(abs($movimiento['monto']), 0, ',', '.');
                       ?>
                     </p>
@@ -135,12 +131,10 @@ if (isset($_SESSION['tipo_usuario'])) {
                             $tipo_movimiento = "Préstamo";
                         } elseif ($movimiento['tipo_movimiento'] == 'Recarga') {
                             $tipo_movimiento = "Recarga de saldo";
-                        } elseif ($movimiento['id_remitente_usuario'] == $id_usuario) {
+                        } elseif ($movimiento['id_remitente_entidad'] == $id_entidad) {
                             $tipo_movimiento = "Transferencia enviada";
-                        } elseif ($movimiento['id_destinatario_usuario'] == $id_usuario) {
-                            $tipo_movimiento = "Transferencia recibida";
                         } else {
-                            $tipo_movimiento = "Movimiento desconocido";
+                            $tipo_movimiento = "Transferencia recibida";
                         }
                         echo htmlspecialchars($tipo_movimiento);
                       ?>

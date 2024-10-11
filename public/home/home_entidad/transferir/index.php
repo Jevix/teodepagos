@@ -1,7 +1,8 @@
 <?php
 session_start();
-if (!isset($_SESSION['id_entidad'])) {
+if (!isset($_SESSION['id_usuario'])) {
   header('Location: ../../../login');
+
 }
 
 ?>
@@ -25,25 +26,26 @@ if (!isset($_SESSION['id_entidad'])) {
     </style>
   </head>
   <body>
-    <section class="transferir-user">
+    <section class="main">
       <nav class="navbar">
         <a href="../index.php">
           <img src="../../../img/back.svg" alt="" />
         </a>
         <p class="h2">Transferir</p>
       </nav>
-      <div class="container">
+      <div class="container-white">
         <button
           class="btn-primary"
           onclick="window.location.href='buscar_usuario.php'"
         >
-          Buscar usuario <img src="../../../img/account.svg" alt="" />
+          Buscar usuario <img src="../img/account-white.svg" alt="" />
         </button>
-        <button class="btn-primary" onclick="window.location.href='escanear_qr.php'">
-          Escanear QR <img src="../../../img/qr-white.svg" alt="" />
+        <button class="btn-primary"
+        onclick="window.location.href='escanear_qr.php'">
+          Escanear QR <img src="../img/qr-white.svg" alt="" />
         </button>
+        <div class="background"></div>
       </div>
-      <!-- <div class="background"></div> -->
     </section>
   </body>
 </html>

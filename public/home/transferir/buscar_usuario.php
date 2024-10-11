@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['id_usuario'])) {
-    header('Location: ../../login');  // Redirigir a la página de login si no está autenticado
+    header('Location: ../../login');
     exit;
 }
 
@@ -11,29 +11,30 @@ $config = require '../../../config/config.php';
 $db = new Database($config['db_host'], $config['db_name'], $config['db_user'], $config['db_pass']);
 $pdo = $db->getConnection();
 
-// Obtener los últimos movimientos de saldo del usuario actual de tipo "egreso"
-$currentUserId = $_SESSION['id_usuario'];
+// Inicializar variables
+$dniNombre = isset($_GET['Dni_Nombre']) ? trim($_GET['Dni_Nombre']) : '';
+$usuarios = [];
+$entidades = [];
 $movimientos = [];
 
+// Consultar los últimos movimientos de saldo del usuario
+$currentUserId = $_SESSION['id_usuario'];
 try {
-    // Consulta con LEFT JOIN para unir información de usuarios y entidades
+    // Consulta para obtener los movimientos
     $stmtMovimientos = $pdo->prepare("
-        SELECT 
-    ms.monto, 
-    ms.tipo_movimiento, 
-    ms.fecha, 
-    u.nombre_apellido AS destinatario_nombre, 
-    u.dni AS destinatario_dni,
-    e.nombre_entidad AS destinatario_entidad, 
-    e.cuit AS destinatario_cuit,
-    e.tipo_entidad AS tipo_entidad  -- Agregamos el tipo de entidad
-FROM movimientos_saldo ms
-LEFT JOIN usuarios u ON ms.id_destinatario_usuario = u.id_usuario
-LEFT JOIN entidades e ON ms.id_destinatario_entidad = e.id_entidad
-WHERE ms.id_remitente_usuario = :id_usuario 
-AND ms.tipo_movimiento = 'Egreso'
-ORDER BY ms.fecha DESC 
-LIMIT 5;
+       SELECT 
+        ms.monto, 
+        u.nombre_apellido AS destinatario_nombre, 
+        u.dni AS destinatario_dni, 
+        e.nombre_entidad AS destinatario_entidad, 
+        e.cuit AS destinatario_cuit,
+        e.tipo_entidad AS destinatario_tipo_entidad
+    FROM movimientos_saldo ms
+    LEFT JOIN usuarios u ON ms.id_destinatario_usuario = u.id_usuario
+    LEFT JOIN entidades e ON ms.id_destinatario_entidad = e.id_entidad
+    WHERE ms.id_remitente_usuario = :id_usuario 
+    ORDER BY ms.fecha DESC 
+    LIMIT 5
     ");
     $stmtMovimientos->execute(['id_usuario' => $currentUserId]);
     $movimientos = $stmtMovimientos->fetchAll(PDO::FETCH_ASSOC);
@@ -41,7 +42,34 @@ LIMIT 5;
     echo "Error al obtener movimientos: " . $e->getMessage();
 }
 
+// Consultar usuarios y entidades por nombre o DNI ingresado
+if ($dniNombre) {
+    try {
+        // Consulta para obtener usuarios
+        $stmtUsuarios = $pdo->prepare("
+            SELECT nombre_apellido, dni 
+            FROM usuarios 
+            WHERE nombre_apellido LIKE :dniNombre OR dni LIKE :dniNombre 
+            LIMIT 5
+        ");
+        $stmtUsuarios->execute(['dniNombre' => "%$dniNombre%"]);
+        $usuarios = $stmtUsuarios->fetchAll(PDO::FETCH_ASSOC);
+
+        // Consulta para obtener entidades
+        $stmtEntidades = $pdo->prepare("
+            SELECT nombre_entidad, cuit 
+            FROM entidades 
+            WHERE nombre_entidad LIKE :dniNombre OR cuit LIKE :dniNombre 
+            LIMIT 5
+        ");
+        $stmtEntidades->execute(['dniNombre' => "%$dniNombre%"]);
+        $entidades = $stmtEntidades->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "Error al buscar usuarios/entidades: " . $e->getMessage();
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -56,28 +84,52 @@ LIMIT 5;
       rel="stylesheet"
     />
     <style>
-        body {
-            background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
-        }
+      body {
+        background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
+      }
+      .recomendaciones {
+        display: none;
+      }
+      .recomendaciones.show {
+        display: block;
+      }
     </style>
 </head>
 <body>
-<section class="buscar-usuario">
+<section class="main">
     <nav class="navbar">
-        <a href="./index.php">
-            <img src="../../img/back.svg" alt="" />
+        <a href="index.php">
+            <img src="../../img/back.svg" alt="Volver" />
         </a>
         <p class="h2">Transferir</p>
     </nav>
-    <div class="container">
-        <form action="buscar_usuario_encontrado.php" method="get" id="searchForm">
+
+    <div class="container-white">
+        <form action="buscar_usuario_encontrado.php" id="searchForm" method="get">
             <label for="usuario" class="h2">Buscar usuario</label>
             <input
                 type="text"
-                name="Dni_Nombre"
                 id="usuario"
+                name="Dni_Nombre"
                 placeholder="Busca por nombre o dni..."
+                class="componente--input--lupa"
+                value="<?php echo htmlspecialchars($dniNombre); ?>"
             />
+            <div id="recomendaciones" class="recomendaciones">
+                <?php if ($dniNombre && (count($usuarios) > 0 || count($entidades) > 0)): ?>
+                    <ul>
+                        <?php foreach ($usuarios as $usuario): ?>
+                            <li><?php echo htmlspecialchars($usuario['nombre_apellido']) . ' - ' . htmlspecialchars($usuario['dni']); ?></li>
+                        <?php endforeach; ?>
+                        <?php foreach ($entidades as $entidad): ?>
+                            <li><?php echo htmlspecialchars($entidad['nombre_entidad']) . ' - ' . htmlspecialchars($entidad['cuit']); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p>No se encontraron resultados</p>
+                <?php endif; ?>
+            </div>
+
             <button
                 type="submit"
                 class="btn-primary submit--off"
@@ -88,75 +140,86 @@ LIMIT 5;
             </button>
         </form>
 
-        <div class="container-anteriores">
+        <!-- Historial de transferencias -->
+        <div class="container-anteriores" id="historialTransferencias">
             <p class="h2">Anteriores transferencias</p>
             <?php if (!empty($movimientos)): ?>
-    <?php foreach ($movimientos as $movimiento): ?>
-        <div class="transferencia" 
-            <?php if (!empty($movimiento['destinatario_dni'])): ?>
-                onclick="redirigir('usuario', '<?= htmlspecialchars($movimiento['destinatario_dni']); ?>', '<?= htmlspecialchars($movimiento['monto']); ?>')"
-            <?php elseif (!empty($movimiento['destinatario_cuit'])): ?>
-                onclick="redirigir('entidad', '<?= htmlspecialchars($movimiento['destinatario_cuit']); ?>', '<?= htmlspecialchars($movimiento['monto']); ?>')"
+                <?php foreach ($movimientos as $movimiento): ?>
+                    <div class="componente--usuario" onclick="redirigir(
+                        '<?php echo (!empty($movimiento['destinatario_dni'])) ? 'usuario' : 'entidad'; ?>', 
+                        '<?php echo (!empty($movimiento['destinatario_dni'])) ? htmlspecialchars($movimiento['destinatario_dni']) : htmlspecialchars($movimiento['destinatario_cuit']); ?>', 
+                        '<?php echo htmlspecialchars($movimiento['monto']); ?>')">
+                        <div class="left">
+                            <?php if (!empty($movimiento['destinatario_dni'])): ?>
+                                <!-- Logo de usuario -->
+                                <img src="../../img/user.svg" alt="Usuario" />
+                                <div>
+                                    <p class="h5"><?php echo htmlspecialchars($movimiento['destinatario_nombre']); ?></p>
+                                    <p class="hb">DNI: <?php echo htmlspecialchars($movimiento['destinatario_dni']); ?></p>
+                                </div>
+                            <?php elseif (!empty($movimiento['destinatario_cuit'])): ?>
+                                <!-- Verificar si la entidad es un banco o una empresa -->
+                                <?php if ($movimiento['destinatario_tipo_entidad'] === 'Banco'): ?>
+                                    <!-- Logo de banco -->
+                                    <img src="../../img/bank.svg" alt="Banco" />
+                                <?php else: ?>
+                                    <!-- Logo de empresa -->
+                                    <img src="../../img/empresa.svg" alt="Empresa" />
+                                <?php endif; ?>
+                                <div>
+                                    <p class="h5"><?php echo htmlspecialchars($movimiento['destinatario_entidad']); ?></p>
+                                    <p class="hb">CUIT: <?php echo htmlspecialchars($movimiento['destinatario_cuit']); ?></p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="right">
+                            <p class="h4 text--blue">$<?php echo number_format($movimiento['monto'], 0, ',', '.'); ?></p>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p>No hay transferencias anteriores</p>
             <?php endif; ?>
-        >
-            <div class="left">
-                <?php if (!empty($movimiento['destinatario_dni'])): ?>
-                    <img src="../../img/user.svg" alt="Usuario" />
-                    <div>
-                        <p class="h5"><?= htmlspecialchars($movimiento['destinatario_nombre']); ?></p>
-                        <p class="hb">DNI: <?= htmlspecialchars($movimiento['destinatario_dni']); ?></p>
-                    </div>
-                <?php elseif (!empty($movimiento['destinatario_cuit'])): ?>
-                    <?php if ($movimiento['tipo_entidad'] === 'Banco'): ?>
-                        <img src="../../img/bank.svg" alt="Banco" />
-                    <?php elseif ($movimiento['tipo_entidad'] === 'Empresa'): ?>
-                        <img src="../../img/company.svg" alt="Empresa" />
-                    <?php endif; ?>
-                    <div>
-                        <p class="h5"><?= htmlspecialchars($movimiento['destinatario_entidad']); ?></p>
-                        <p class="hb">CUIT: <?= htmlspecialchars($movimiento['destinatario_cuit']); ?></p>
-                    </div>
-                <?php endif; ?>
-            </div>
-            <div class="right">
-            <p class="h4 text--blue">$<?= number_format($movimiento['monto'], 0, '', '.'); ?></p>
-            </div>
         </div>
-    <?php endforeach; ?>
-<?php else: ?>
-    <p>Aún no realizaste transferencias.</p>
-<?php endif; ?>
-
-        </div>
+        <div class="background"></div>
     </div>
 </section>
+
 <script>
+    document.addEventListener("DOMContentLoaded", () => {
+    const usuario = usuarioInput.value.trim();
+    if (usuario) {
+        submitButton.classList.remove("submit--off");
+        submitButton.classList.add("submit--on");
+        submitButton.disabled = false;
+    }
+});
     const form = document.getElementById("searchForm");
     const submitButton = document.getElementById("submitButton");
+    const usuarioInput = document.getElementById("usuario");
 
     form.addEventListener("input", () => {
-        const usuario = document.getElementById("usuario").value.trim();
-        if (usuario.length >= 3) {
+        const usuario = usuarioInput.value.trim();
+
+        if (usuario) {
             submitButton.classList.remove("submit--off");
             submitButton.classList.add("submit--on");
-            submitButton.disabled = false; // Habilita el botón
+            submitButton.disabled = false;
         } else {
             submitButton.classList.remove("submit--on");
             submitButton.classList.add("submit--off");
-            submitButton.disabled = true; // Deshabilita el botón
+            submitButton.disabled = true;
         }
     });
 
     function redirigir(tipo, valor, monto) {
+    let montoFormateado = parseInt(monto).toLocaleString('de-DE');
     if (tipo === 'usuario') {
-        // Redirigir a la página de usuario con el DNI y monto
-        window.location.href = `procesar_transferencia.php?dni=${valor}&monto=${monto}`;
+        window.location.href = `procesar_transferencia.php?dni=${valor}&monto=${montoFormateado}`;
     } else if (tipo === 'entidad') {
-        // Redirigir a la página de entidad con el CUIT y monto
-        window.location.href = `procesar_transferencia.php?cuit=${valor}&monto=${monto}`;
+        window.location.href = `procesar_transferencia.php?cuit=${valor}&monto=${montoFormateado}`;
     }
 }
-
 </script>
 </body>
 </html>

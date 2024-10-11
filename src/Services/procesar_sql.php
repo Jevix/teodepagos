@@ -73,7 +73,7 @@
                     id_transaccion INT AUTO_INCREMENT PRIMARY KEY,
                     id_remitente_usuario INT DEFAULT NULL,
                     id_remitente_entidad INT DEFAULT NULL,
-                    monto DECIMAL(10,2) NOT NULL CHECK (monto >= 1),
+                    monto DECIMAL(10,0) NOT NULL CHECK (monto >= 1),
                     tipo_movimiento ENUM('Ingreso', 'Egreso', 'Prestamo','Recarga') NOT NULL,
                     id_destinatario_usuario INT DEFAULT NULL,
                     id_destinatario_entidad INT DEFAULT NULL,

@@ -121,76 +121,97 @@ if (empty($dni) && empty($cuit)) {
   width: 100px; /* Ajusta el tamaño según sea necesario */
   height: 100px;
 }
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px); /* Sube el texto */
+    }
+    60% {
+        transform: translateY(-5px); /* Rebote menor */
+    }
+}
+
+.texto-rojo {
+    color: red !important;
+    animation: bounce 0.5s ease; /* Aplica la animación solo cuando la clase está activa */
+}
+
+.bounce { 
+    animation: bounce 0.5s ease; /* Aplica la animación */
+}
     </style>
   </head>
   <body>
   <div id="loader" class="loader" style="display: none;">
   <img src="../../img/loader.gif" alt="Cargando..." />
 </div>
-    <section class="transferir-user">
-    
+    <section class="main">
       <nav class="navbar">
         <a href="buscar_usuario.php">
-          <img src="../../img/back.svg" alt="Back" />
+          <img src="../../img/back.svg" alt="" />
         </a>
         <p class="h2">Transferir</p>
       </nav>
-
-      <div class="container">
-        <div class="transferencia" style="justify-content: center;">
+      <div class="container-white">
+        <div class="transferencia" onclick="redirigir()">
           <div class="left">
-            <p class="h4"><?= htmlspecialchars($nombre_destinatario); ?></p><br>
+            <div>
+            <p class="h4"><?= htmlspecialchars($nombre_destinatario); ?></p>
             <?php if ($tipo_destinatario == 'usuario'): ?>
-              <p class="h4">DNI: <?= htmlspecialchars($dni); ?></p>
+              <p class="hb">DNI: <?= htmlspecialchars($dni); ?></p>
+              </div>
             <?php elseif ($tipo_destinatario == 'entidad'): ?>
-              <p class="h4">CUIT: <?= htmlspecialchars($cuit); ?></p>
+              <p class="hb">CUIT: <?= htmlspecialchars($cuit); ?></p>
+              </div>
             <?php endif; ?>
           </div>
         </div>
-
         <div class="dinero-disponible">
-          <p class="h4">Tu dinero disponible: $<?= number_format($saldo_sesion, 2, ',', '.'); ?></p>
-          <div>
+        <p class="h4" id="dineroDisponible">Tu dinero disponible: $<?= number_format($saldo_sesion, 0, ',', '.'); ?></p>
+        <div>
             <p class="h1">$</p>
             <p class="h1" id="display" oninput="toggleBtn()"><?= htmlspecialchars($monto); ?></p>
           </div>
         </div>
-
         <div class="teclado-numerico">
           <div class="row">
-            <button class="h2" onclick="agregarNum(1)">1</button>
-            <button class="h2" onclick="agregarNum(2)">2</button>
-            <button class="h2" onclick="agregarNum(3)">3</button>
+            <button class="h2" id="btn" onclick="agregarNum(1)">1</button>
+            <button class="h2" id="btn" onclick="agregarNum(2)">2</button>
+            <button class="h2" id="btn" onclick="agregarNum(3)">3</button>
           </div>
           <div class="row">
-            <button class="h2" onclick="agregarNum(4)">4</button>
-            <button class="h2" onclick="agregarNum(5)">5</button>
-            <button class="h2" onclick="agregarNum(6)">6</button>
+            <button class="h2" id="btn" onclick="agregarNum(4)">4</button>
+            <button class="h2" id="btn" onclick="agregarNum(5)">5</button>
+            <button class="h2" id="btn" onclick="agregarNum(6)">6</button>
           </div>
           <div class="row">
-            <button class="h2" onclick="agregarNum(7)">7</button>
-            <button class="h2" onclick="agregarNum(8)">8</button>
-            <button class="h2" onclick="agregarNum(9)">9</button>
+            <button class="h2" id="btn" onclick="agregarNum(7)">7</button>
+            <button class="h2" id="btn" onclick="agregarNum(8)">8</button>
+            <button class="h2" id="btn" onclick="agregarNum(9)">9</button>
           </div>
           <div class="row">
-            <button class="h2"></button>
-            <button class="h2" onclick="agregarNum(0)">0</button>
-            <button class="h2" onclick="borrar()">&lt;</button>
+            <button class="h2" id="btn"></button>
+            <button class="h2" id="btn" onclick="agregarNum(0)">0</button>
+            <button class="h2" id="btn" onclick="borrar()"><</button>
           </div>
         </div>
-
-        <button class="btn-primary submit--on" id="submitButton" onclick="transferir()">
+        <button
+          class="btn-primary submit--off"
+          id="submitButton"
+          onclick="transferir()"
+          disabled
+        >
           Transferir
         </button>
-        
-
+        <div class="background"></div>
       </div>
     </section>
-
     <script>
       const display = document.getElementById("display");
+      const btn = document.getElementById("btn");
       const submitButton = document.getElementById("submitButton");
-
       function agregarNum(number) {
         let value = display.textContent;
         if (value === "0") {
@@ -218,18 +239,55 @@ if (empty($dni) && empty($cuit)) {
         toggleBtn();
       }
 
-      function toggleBtn() {
-        let valorDisplay = display.innerHTML;
-        if (valorDisplay !== "0") {
-          submitButton.classList.remove("submit--off");
-          submitButton.classList.add("submit--on");
-          submitButton.disabled = false;
+      document.addEventListener("DOMContentLoaded", function() {
+    // Realizar scroll hacia abajo cuando la página se carga
+    window.scrollTo(0, document.body.scrollHeight);
+
+    // Código para habilitar/deshabilitar el botón basado en el monto de la URL
+    const montoUrl = "<?= isset($_GET['monto']) ? $_GET['monto'] : ''; ?>";
+    const display = document.getElementById("display");
+    const submitButton = document.getElementById("submitButton");
+
+    // Si el monto viene desde la URL, mostrarlo en el campo y habilitar el botón
+    if (montoUrl && parseInt(montoUrl) > 0) {
+        display.textContent = montoUrl.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Formatear con puntos
+        submitButton.classList.remove("submit--off");
+        submitButton.classList.add("submit--on");
+        submitButton.disabled = false;
+    } else {
+        // Si no hay monto o es 0, el botón permanece deshabilitado
+        submitButton.classList.remove("submit--on");
+        submitButton.classList.add("submit--off");
+        submitButton.disabled = true;
+    }
+});
+
+function toggleBtn() {
+    let valorDisplay = display.textContent.replace(/\./g, ''); // Eliminar puntos para hacer comparaciones numéricas
+    const montoNumerico = parseInt(valorDisplay, 10); // Convertir el texto a un número entero
+    const saldoDisponible = <?= json_encode($saldo_sesion); ?>; // Obtenemos el saldo disponible desde PHP
+
+    const dineroDisponible = document.getElementById('dineroDisponible'); // Selecciona el párrafo del saldo disponible
+
+    // Validar si el monto es mayor que 0 y menor o igual al saldo disponible
+    if (montoNumerico > 0 && montoNumerico <= saldoDisponible) {
+        submitButton.classList.remove("submit--off");
+        submitButton.classList.add("submit--on");
+        submitButton.disabled = false; // Habilitar el botón
+        dineroDisponible.classList.remove('texto-rojo', 'bounce');
+    } else {
+        submitButton.classList.remove("submit--on");
+        submitButton.classList.add("submit--off");
+        submitButton.disabled = true; // Deshabilitar el botón
+
+        // Si el monto es mayor al saldo disponible, cambiar el color a rojo y aplicar el efecto de salto
+        if (montoNumerico > saldoDisponible) {
+            dineroDisponible.classList.add('texto-rojo', 'bounce');
         } else {
-          submitButton.classList.remove("submit--on");
-          submitButton.classList.add("submit--off");
-          submitButton.disabled = true;
+            dineroDisponible.classList.remove('texto-rojo', 'bounce');
         }
-      }
+    }
+}
 
       function transferir() {
     const display = document.getElementById("display");
@@ -281,9 +339,5 @@ if (empty($dni) && empty($cuit)) {
 }
 
     </script>
-
-
-
-
   </body>
 </html>

@@ -91,7 +91,12 @@ $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <section class="home-user">
       <nav class="navbar">
         <div class="left">
-          <img src="../../img/saludo.svg" alt="" />
+          <?php if ($entidad['tipo_entidad'] === 'Banco')
+            echo '<img src="../../img/banco-white.svg" alt="" />'; 
+
+            elseif ($entidad['tipo_entidad'] === 'Empresa')
+            echo '<img src="../../img/empresa-white.svg" alt="" />';
+            ?>
           <div>
               <p class="documento"><?php echo $entidad['cuit']; ?></p> <!-- Mostrar CUIT -->
               <p class="nombre"><?php echo $entidad['nombre_entidad']; ?></p> <!-- Mostrar nombre de la entidad -->
@@ -101,12 +106,14 @@ $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <?php
           if ($entidad['tipo_entidad'] === 'Banco') {
               echo '<a href="../../logout.php">';
+              echo '<img src="../../img/salir.svg" alt="" class="salir" />';
           } else {
               echo '<a href="../index.php">';
+              echo '<img src="../../img/back.svg" alt="" class="salir" />';
           }
           ?>
                
-               <img src="../../img/salir.svg" alt="" class="salir" />
+               
           </a>
         </div>
       </nav>
@@ -247,8 +254,12 @@ $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <p>No tienes movimientos todavía.</p>
     </div>
 <?php endif; ?>
+<div class="container-btn">
+            <button class="btn-primary" onclick="window.location.href='./movimientos.php'">Historial</button>
+          </div>
         </div>
       </div>
+      <div class="background"></div>
     </section>
     <script>
       function showLoaderAndRedirect(url) {

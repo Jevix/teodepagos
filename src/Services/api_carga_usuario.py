@@ -11,6 +11,8 @@ def leer_usuarios_excel(archivo_excel):
     for index, row in df.iterrows():
         # Validar y manejar valores 'nan' o incorrectos
         password = str(row['password']) if pd.notna(row['password']) else "default_password"  # Mantener como string
+        saldo = float(row['saldo']) if pd.notna(row['saldo']) else 0
+
         
         # Convertir id_entidad a número si es posible, y manejar valores NaN
         try:
@@ -26,7 +28,8 @@ def leer_usuarios_excel(archivo_excel):
             'dni': str(row['dni']),  # Aseguramos que sea una cadena ya que es varchar en la BD
             'password': password,
             'tipo_usuario': tipo_usuario,
-            'id_entidad': id_entidad  # Asegúrate de que id_entidad sea un entero
+            'id_entidad': id_entidad,  # Asegúrate de que id_entidad sea un entero
+            'saldo' : saldo
         }
         usuarios.append(usuario)
     return usuarios

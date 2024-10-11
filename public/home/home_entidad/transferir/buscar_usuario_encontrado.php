@@ -1,7 +1,65 @@
 <?php
 session_start();
 if (!isset($_SESSION['id_entidad'])) {
-    header('Location: ../../../login');
+    header('Location: ../../login');
+    exit;
+}
+
+// Incluir la configuración y la clase Database
+require '../../../../src/Models/Database.php';
+$config = require '../../../../config/config.php';
+$db = new Database($config['db_host'], $config['db_name'], $config['db_user'], $config['db_pass']);
+$pdo = $db->getConnection();
+
+// Inicializar variables
+$dniNombre = isset($_GET['Dni_Nombre']) ? trim($_GET['Dni_Nombre']) : '';
+$usuarios = [];
+$entidades = [];
+$error = '';
+
+// Obtener el ID de la entidad actual desde la sesión
+$currentEntityId = $_SESSION['id_entidad'];
+
+// Proceder con la búsqueda solo si se ha ingresado `Dni_Nombre`
+if ($dniNombre && empty($error)) {
+    try {
+        // Consulta para buscar usuarios, excluyendo usuarios de tipo "miembro" de bancos y excluyendo la entidad en sesión
+        $queryUsuarios = "
+            SELECT u.nombre_apellido, u.dni 
+            FROM usuarios u 
+            LEFT JOIN entidades e ON u.id_entidad = e.id_entidad 
+            WHERE (u.nombre_apellido LIKE :dniNombre OR u.dni LIKE :dniNombre)
+            AND (u.tipo_usuario != 'miembro' OR e.tipo_entidad != 'banco' OR e.id_entidad IS NULL)
+            AND (e.id_entidad != :currentEntityId OR u.id_entidad IS NULL)
+        ";
+
+        // Consulta para buscar entidades (empresas y bancos), excluyendo la entidad en sesión
+        $queryEntidades = "
+            SELECT nombre_entidad, cuit, tipo_entidad 
+            FROM entidades 
+            WHERE (nombre_entidad LIKE :dniNombre OR cuit LIKE :dniNombre) 
+            AND id_entidad != :currentEntityId
+        ";
+
+        // Ejecutar la consulta en la tabla `usuarios`
+        $stmtUsuarios = $pdo->prepare($queryUsuarios);
+        $stmtUsuarios->execute([
+            'dniNombre' => "%$dniNombre%",
+            'currentEntityId' => $currentEntityId
+        ]);
+        $usuarios = $stmtUsuarios->fetchAll(PDO::FETCH_ASSOC);
+
+        // Ejecutar la consulta en la tabla `entidades`
+        $stmtEntidades = $pdo->prepare($queryEntidades);
+        $stmtEntidades->execute([
+            'dniNombre' => "%$dniNombre%",
+            'currentEntityId' => $currentEntityId
+        ]);
+        $entidades = $stmtEntidades->fetchAll(PDO::FETCH_ASSOC);
+
+    } catch (PDOException $e) {
+        $error = "Error en la consulta: " . $e->getMessage();
+    }
 }
 ?>
 
@@ -10,12 +68,11 @@ if (!isset($_SESSION['id_entidad'])) {
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Buscar usuario</title>
+    <title>Buscar usuario o entidad</title>
     <link rel="stylesheet" href="../../../styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
@@ -23,123 +80,84 @@ if (!isset($_SESSION['id_entidad'])) {
     </style>
 </head>
 <body>
-<section class="buscar-usuario">
+<section class="main">
     <nav class="navbar">
-        <a href="./index.php">
-            <img src="../../../img/back.svg" alt="" />
+        <a href="buscar_usuario.php">
+            <img src="../../../img/back.svg" alt="Volver" />
         </a>
         <p class="h2">Transferir</p>
     </nav>
-    <div class="container">
-        <form id="searchForm">
-            <label for="usuario" class="h2">Buscar usuario</label>
+    <div class="container-white">
+        <form action="" method="GET" id="searchForm">
+            <label for="usuario" class="h2">Buscar usuario o entidad</label>
             <input
                 type="text"
                 name="Dni_Nombre"
                 id="usuario"
-                placeholder="Busca por nombre o dni..."
-                value=""
+                placeholder="Busca por nombre o identificador..."
+                class="componente--input--lupa"
+                value="<?php echo htmlspecialchars($dniNombre); ?>"
             />
             
-            <div id="container-anteriores" class="container-anteriores">
-            </div>
+            <!-- Mostrar los resultados de la búsqueda -->
+            <?php if ($dniNombre && (count($usuarios) > 0 || count($entidades) > 0)): ?>
+                <!-- Mostrar usuarios -->
+                <?php foreach ($usuarios as $usuario): ?>
+                    <div class="transferencia corto" onclick="window.location.href='procesar_transferencia.php?dni=<?php echo htmlspecialchars($usuario['dni']); ?>'">
+                        <div class="left">
+                            <!-- Mostrar ícono de usuario por defecto -->
+                            <img src="../../../img/user.svg" alt="Usuario" />
+                            <p class="h5"><?php echo htmlspecialchars($usuario['nombre_apellido']); ?></p>
+                            <p class="hb">DNI: <?php echo htmlspecialchars($usuario['dni']); ?></p>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
 
-            <button type="submit" class="btn-primary submit--on" id="submitButton">
+                <!-- Mostrar entidades (empresas o bancos) -->
+                <?php foreach ($entidades as $entidad): ?>
+                    <div class="transferencia corto" onclick="window.location.href='procesar_transferencia.php?cuit=<?php echo htmlspecialchars($entidad['cuit']); ?>'">
+                        <div class="left">
+                            <!-- Determinar si la entidad es un banco o una empresa para mostrar el ícono adecuado -->
+                            <img src="../../../img/<?php echo ($entidad['tipo_entidad'] === 'Banco') ? 'bank' : 'empresa'; ?>.svg" alt="<?php echo htmlspecialchars($entidad['tipo_entidad']); ?>" />
+                            <p class="h5"><?php echo htmlspecialchars($entidad['nombre_entidad']); ?></p>
+                            <p class="hb">CUIT: <?php echo htmlspecialchars($entidad['cuit']); ?></p>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php elseif ($dniNombre): ?>
+                <p>No se encontraron resultados.</p>
+            <?php endif; ?>
+
+            <button
+                type="submit"
+                class="btn-primary submit--off"
+                id="submitButton"
+                disabled
+            >
                 Buscar cuenta
             </button>
         </form>
+        <div class="background"></div>
+
     </div>
 </section>
+
 <script>
-// Función para obtener el valor de un parámetro de la URL
-function getParameterByName(name) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(name);
-}
+    const form = document.getElementById("searchForm");
+    const submitButton = document.getElementById("submitButton");
+    const usuarioInput = document.getElementById("usuario");
 
-// Al cargar la página, verifica si 'Dni_Nombre' está en la URL y modifica el input
-$(document).ready(function() {
-    const dniNombre = getParameterByName('Dni_Nombre');
-    if (dniNombre) {
-        $("#usuario").val(dniNombre);  // Coloca el valor en el input
-        $("#submitButton").prop("disabled", false); // Habilita el botón si tiene valor
-        performSearch();  // Realiza la búsqueda automáticamente si viene de otra página con el parámetro
-    }
-
-    // Habilita el botón cuando el campo tiene 3 o más caracteres
-    $("#usuario").on("input", function() {
-        $("#submitButton").prop("disabled", $(this).val().trim().length < 3);
-    });
-});
-
-function performSearch() {
-    const dniNombre = $("#usuario").val().trim();
-
-    // Si el input tiene menos de 3 caracteres, no realiza la búsqueda
-    if (dniNombre.length < 3) {
-        $("#container-anteriores").html("<p>Ingrese al menos 3 caracteres para buscar.</p>");
-        return;
-    }
-
-    $.ajax({
-        url: "buscar_usuario_logica.php", 
-        type: "get",
-        data: { Dni_Nombre: dniNombre },
-        dataType: "json",
-        success: function(data) {
-            console.log("Datos recibidos:", data);
-            const containerAnteriores = $("#container-anteriores");
-            containerAnteriores.empty(); 
-            containerAnteriores.append('<p class="h2">Anteriores transferencias</p>');
-
-            if (data.usuarios.length > 0 || data.entidades.length > 0) {
-                data.usuarios.forEach(usuario => {
-                    const usuarioHtml = `
-                        <div class="transferencia corto" onclick="window.location.href='procesar_transferencia.php?dni=${usuario.dni}'">
-                        <img src="../../../img/user.svg" alt="Banco" />
-                            <div class="left">
-                                <div>
-                                    <p class="h5">${usuario.nombre_apellido}</p>
-                                    <p class="hb">DNI: ${usuario.dni}</p>
-                                </div>
-                            </div>
-                            <div class="right">
-                            </div>
-                        </div>
-                    `;
-                    containerAnteriores.append(usuarioHtml);
-                });
-
-                data.entidades.forEach(entidad => {
-                    const entidadHtml = `
-                        <div class="transferencia" onclick="window.location.href='procesar_transferencia.php?cuit=${entidad.cuit}'"> 
-                            <div class="left">
-                                <img src="../../img/company.svg" alt="" />
-                                <div>
-                                    <p class="h5">${entidad.nombre_entidad}</p>
-                                    <p class="hb">CUIT: ${entidad.cuit}</p>
-                                </div>
-                            </div>
-                            <div class="right">
-                            </div>
-                        </div>
-                    `;
-                    containerAnteriores.append(entidadHtml);
-                });
-            } else {
-                containerAnteriores.html("<p>No se encontraron resultados.</p>");
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error("Error al buscar usuario:", error);
+    form.addEventListener("input", () => {
+        const usuario = usuarioInput.value.trim();
+        submitButton.disabled = usuario.length < 3; // Habilita el botón solo si hay al menos 3 caracteres
+        if (usuario) {
+            submitButton.classList.remove("submit--off");
+            submitButton.classList.add("submit--on");
+        } else {
+            submitButton.classList.remove("submit--on");
+            submitButton.classList.add("submit--off");
         }
     });
-}
-
-$("#searchForm").on("submit", function(e) {
-    e.preventDefault();
-    performSearch();
-});
 </script>
 </body>
 </html>
