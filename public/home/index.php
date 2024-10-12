@@ -120,6 +120,18 @@ if (isset($_SESSION['tipo_usuario'])) {
         justify-content: center;
         align-items: center;
       }
+      #h4 {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 190px; /* Ajusta el ancho según sea necesario */
+      }
+      #hb{
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 160px; /* Ajusta el ancho aquí sea necesario */
+      }
 
     </style>
   </head>
@@ -190,7 +202,7 @@ if (isset($_SESSION['tipo_usuario'])) {
                         ?>
                      <img src="<?php echo htmlspecialchars($img_src); ?>" alt="Entidad" />
                      <div>
-                        <p class="h4">
+                        <p class="h4" id="h4">
                            <?php
                               $id_columna_remitente_usuario = $movimiento['id_remitente_usuario'];
                               $id_columna_destinatario_usuario = $movimiento['id_destinatario_usuario'];
@@ -234,7 +246,7 @@ if (isset($_SESSION['tipo_usuario'])) {
                               // Mostrar detalles adicionales del movimiento, como el tipo de movimiento
                               ?>
                         </p>
-                        <p class="hb">
+                        <p class="hb" id="hb">
                            <?php
                               $descripcion_movimiento = '';
                               $signo = '';

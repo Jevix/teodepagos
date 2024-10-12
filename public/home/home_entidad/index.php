@@ -127,11 +127,11 @@ $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <img src="../../img/account_1.svg" alt="Cuentas" />
             <p class="hb">Cuentas</p>
         </div>
-        <div onclick="showLoaderAndRedirect('agregar.php')">
+        <div onclick="showLoaderAndRedirect('agregar_usuario.php')">
             <img src="../../img/agregar_usuario.svg" alt="Agregar" />
             <p class="hb">Agregar</p>
         </div>
-        <div onclick="showLoaderAndRedirect('transferir/buscar_usuario_encontrado_banco.php')">
+        <div onclick="showLoaderAndRedirect('emitir_dinero')">
             <img src="../../img/emitir.svg" alt="Emitir Dinero" />
             <p class="hb">Emitir Dinero</p>
         </div>
