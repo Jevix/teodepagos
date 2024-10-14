@@ -105,18 +105,7 @@ if ($dniNombre) {
       .componente--input--lupa {
   background: url("../../../img/search.svg") no-repeat 20px center !important;
 }
-#h4 {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        width: 190px; /* Ajusta el ancho según sea necesario */
-      }
-      #hb {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        width: 160px; /* Ajusta el ancho aquí según sea necesario */
-      }
+
       
     </style>
 </head>

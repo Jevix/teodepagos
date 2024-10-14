@@ -9,8 +9,11 @@ $pdo = $db->getConnection();
 $dni = isset($_GET['dni']) ? htmlspecialchars($_GET['dni']) : '';
 $cuit = isset($_GET['cuit']) ? htmlspecialchars($_GET['cuit']) : '';
 
-// Si no hay identificador, redirigir de nuevo
-if (!$dni && !$cuit) {
+// Obtener el monto desde el GET
+$monto = isset($_GET['monto']) ? htmlspecialchars($_GET['monto']) : '';
+
+// Si no hay identificador ni monto, redirigir de nuevo
+if ((!$dni && !$cuit) || !$monto) {
     header('Location: buscar_usuario.php');
     exit;
 }
@@ -86,20 +89,21 @@ if ($dni) {
         <!-- Formulario para seleccionar tipo de emisión y enviar a procesar_transferencia.php -->
         <form action="procesar_transferencia.php" method="get">
           <input type="hidden" name="identificador" value="<?= $identificador ?>">
-          
+          <input type="hidden" name="monto" value="<?= $monto ?>"> <!-- Reenviar el monto -->
+
           <div class="container-2">
             <p class="h2 text--darkblue">Tipo de emisión</p>
           </div>
 
           <div class="container-3">
-            <div class="container-checkbox">
+            <label for="checkbox1" class="container-checkbox">
               <p class="h2 text--darkblue">Recarga</p>
               <input type="radio" name="tipo_emision" value="Recarga" id="checkbox1" class="checkbox" onclick="verificarCheckbox()"/>
-            </div>
-            <div class="container-checkbox">
+            </label>
+            <label for="checkbox2" class="container-checkbox">
               <p class="h2 text--darkblue">Préstamo</p>
               <input type="radio" name="tipo_emision" value="Prestamo" id="checkbox2" class="checkbox" onclick="verificarCheckbox()"/>
-            </div>
+            </label>
           </div>
 
           <div class="container-4">

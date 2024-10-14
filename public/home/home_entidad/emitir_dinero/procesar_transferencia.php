@@ -19,8 +19,9 @@ $id_remitente_entidad = $_SESSION['id_entidad'];
 // Recibir los datos GET del formulario
 $identificador = isset($_GET['identificador']) ? htmlspecialchars($_GET['identificador']) : null;
 $tipo_emision = isset($_GET['tipo_emision']) ? htmlspecialchars($_GET['tipo_emision']) : null;
+$monto = isset($_GET['monto']) ? htmlspecialchars($_GET['monto']) : 0;
 
-if (!$identificador || !$tipo_emision) {
+if (!$identificador || !$tipo_emision || $monto <= 0) {
     die('Faltan datos para procesar la transferencia.');
 }
 
@@ -105,7 +106,8 @@ try {
       <div class="dinero-disponible">
         <div>
             <p class="h1">$</p>
-            <p class="h1" id="display" oninput="toggleBtn()">0</p>
+            <!-- Mostrar el monto recibido por GET -->
+            <p class="h1" id="display" oninput="toggleBtn()"><?= htmlspecialchars($monto); ?></p>
         </div>
       </div>
 
@@ -190,35 +192,38 @@ try {
     }
 
     function transferir() {
-      const monto = display.textContent.replace(/\./g, '');  // Monto del input de pantalla
-      const identificador = "<?= $identificador; ?>";
-      const tipo_emision = "<?= $tipo_emision; ?>";  // Tipo de emisión seleccionado
+    const monto = display.textContent.replace(/\./g, '');  // Monto del input de pantalla
+    const identificador = "<?= $identificador; ?>";
+    const tipo_emision = "<?= $tipo_emision; ?>";  // Tipo de emisión seleccionado
 
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = 'logica_transferencia.php';
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'logica_transferencia.php';
 
-      const montoField = document.createElement('input');
-      montoField.type = 'hidden';
-      montoField.name = 'monto';
-      montoField.value = monto;
-      form.appendChild(montoField);
+    // Campo oculto para el monto
+    const montoField = document.createElement('input');
+    montoField.type = 'hidden';
+    montoField.name = 'monto';
+    montoField.value = monto;
+    form.appendChild(montoField);
 
-      const idField = document.createElement('input');
-      idField.type = 'hidden';
-      idField.name = 'identificador';
-      idField.value = identificador;
-      form.appendChild(idField);
+    // Campo oculto para el identificador
+    const idField = document.createElement('input');
+    idField.type = 'hidden';
+    idField.name = 'identificador';
+    idField.value = identificador;
+    form.appendChild(idField);
 
-      const tipoEmisionField = document.createElement('input');
-      tipoEmisionField.type = 'hidden';
-      tipoEmisionField.name = 'tipo_emision';
-      tipoEmisionField.value = tipo_emision;
-      form.appendChild(tipoEmisionField);
+    // Campo oculto para el tipo de emisión
+    const tipoEmisionField = document.createElement('input');
+    tipoEmisionField.type = 'hidden';
+    tipoEmisionField.name = 'tipo_emision';
+    tipoEmisionField.value = tipo_emision;
+    form.appendChild(tipoEmisionField);
 
-      document.body.appendChild(form);
-      form.submit();
-    }
+    document.body.appendChild(form);
+    form.submit();
+}
   </script>
 </body>
 </html>

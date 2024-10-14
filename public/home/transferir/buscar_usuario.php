@@ -226,7 +226,8 @@ if ($dniNombre) {
     });
 
     function redirigir(tipo, valor, monto) {
-    let montoFormateado = parseInt(monto).toLocaleString('de-DE');
+    //formatear el monto sin puntos
+    let montoFormateado = monto.replace(/\./g, '');
     if (tipo === 'usuario') {
         window.location.href = `procesar_transferencia.php?dni=${valor}&monto=${montoFormateado}`;
     } else if (tipo === 'entidad') {

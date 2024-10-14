@@ -99,7 +99,7 @@ $nombre_entidad = isset($_POST['nombre_entidad']) ? htmlspecialchars($_POST['nom
         <div class="container-exito-3">
           <button
             class="btn-primary"
-            onclick="redireccionar('index.php')"
+            onclick="redireccionar('buscar_usuario.php')"
           >
             Volver a transferir
           </button>

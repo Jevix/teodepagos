@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
       <!-- Contenido que no será afectado por el blur -->
-      <img src="../img/logo.png" alt="Logo" />
+      <img src="../img/logo.png" alt="Logo" id="logo" />
 
       <!-- Contenido que sí será afectado por el blur -->
       <section class="section-form" id="formContent">
@@ -176,14 +176,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       document.addEventListener("DOMContentLoaded", function() {
         const loader = document.getElementById("loader");
         const formContent = document.getElementById("formContent");
-
-        // Mostrar el loader cuando se envía el formulario
+        const logo = document.getElementById("logo");
         const form = document.getElementById("loginForm");
+
         form.addEventListener("submit", function(event) {
           event.preventDefault(); // Detener el envío del formulario
 
+
           loader.style.display = "flex"; // Mostrar el loader
           formContent.classList.add("blurred-content"); // Aplicar blur al contenido del formulario
+          logo.classList.add("blurred-content"); // Aplicar blur al logo
 
           // Simular un retraso de 2 segundos antes de enviar el formulario
           setTimeout(function() {

@@ -205,6 +205,7 @@ if (!empty($dni) && strlen($dni) === 8) {
     </section>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
+        window.scrollTo(0, document.body.scrollHeight);
     // Obtener el valor de "monto" desde la URL (GET)
     const urlParams = new URLSearchParams(window.location.search);
     const montoInicial = urlParams.get('monto');
