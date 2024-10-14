@@ -7,7 +7,7 @@ session_set_cookie_params($session_lifetime);
 session_start();
 
 // Si la sesión no está activa, redirigir al login
-if (!isset($_SESSION['id_usuario']) ) {
+if (!isset($_SESSION['id_usuario'])) {
     header('Location: ../login');  // Redirigir a la página de login si no está autenticado
     exit;
 }
@@ -65,17 +65,16 @@ if (isset($_SESSION['tipo_usuario'])) {
 
             if ($entidad) {
                 if ($entidad['tipo_entidad'] === 'Banco') {
-                   $_SESSION['id_entidad'] = $entidad['id_entidad'];
-                   $_SESSION['nombre_entidad'] = $entidad['nombre_entidad'];
-                   $_SESSION['tipo_entidad'] = $entidad['tipo_entidad'];
+                    $_SESSION['id_entidad'] = $entidad['id_entidad'];
+                    $_SESSION['nombre_entidad'] = $entidad['nombre_entidad'];
+                    $_SESSION['tipo_entidad'] = $entidad['tipo_entidad'];
                     header('Location: home_entidad/');
                     exit;
                 } elseif ($entidad['tipo_entidad'] === 'Empresa') {
-                 $_SESSION['id_entidad'] = $entidad['id_entidad'];
-                 $_SESSION['nombre_entidad'] = $entidad['nombre_entidad'];
-                 $_SESSION['tipo_entidad'] = $entidad['tipo_entidad'];
+                    $_SESSION['id_entidad'] = $entidad['id_entidad'];
+                    $_SESSION['nombre_entidad'] = $entidad['nombre_entidad'];
+                    $_SESSION['tipo_entidad'] = $entidad['tipo_entidad'];
                 }
-
             } else {
                 echo "<script>console.log('Entidad no encontrada para el usuario.');</script>";
             }
@@ -93,11 +92,11 @@ if (isset($_SESSION['tipo_usuario'])) {
 ?>
 <!DOCTYPE html>
 <html lang="en" translate="no">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Home</title>
-      <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -108,206 +107,260 @@ if (isset($_SESSION['tipo_usuario'])) {
       body {
         background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
       }
-        /* Estilos para el loader */
-      .loader {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 9999; /* Asegúrate de que el loader esté por encima de todo */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
+      /* Estilos para el loader */
       #h4 {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         width: 190px; /* Ajusta el ancho según sea necesario */
       }
-      #hb{
+      #hb {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        width: 160px; /* Ajusta el ancho aquí sea necesario */
+        width: 160px; /* Ajusta el ancho aquí según sea necesario */
       }
+      #h2 {
+        color: #172146 !important;
+      }
+      .bg-ventana-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro semitransparente */
+    backdrop-filter: blur(10px); /* Aplicar el desenfoque al fondo */
+    display: none; /* Ocultar por defecto */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Asegurarse de que esté por encima de todo */
+}
 
+.ventana-modal {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 1001; /* El modal debe estar por encima del fondo */
+}
+
+.loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7); /* Fondo blanco semitransparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+
+      
     </style>
-  </head>
-  <body>
-   <!-- Loader que muestra el GIF -->
-   <div id="loader" class="loader" style="display: none;">
+</head>
+<body>
+  <!-- Loader que muestra el GIF -->
+  <div id="loader" class="loader" style="display: none;">
       <img src="../img/loader.gif" alt="Cargando..." />
-    </div>
+  </div>
 
-
-    <section class="home-user">
-      <nav class="navbar">
-        <div class="left">
-          <img src="../img/saludo.svg" alt="" />
-          <div>
-                  <p class="documento"><?php echo $usuario['dni']; ?></p>
-                  <p class="nombre"><?php echo $usuario['nombre_apellido']; ?></p>
-          </div>
+  <section class="home-user">
+    <nav class="navbar">
+      <div class="left">
+        <img src="../img/saludo.svg" alt="" />
+        <div>
+          <p class="documento"><?php echo $usuario['dni']; ?></p>
+          <p class="nombre"><?php echo $usuario['nombre_apellido']; ?></p>
         </div>
-        <div class="right">
-               <a href="../logout.php">
-               <img src="../img/salir.svg" alt="" class="salir" />
-          </a>
-        </div>
-      </nav>
-      <div class="dinero">
-        <p class="h2">Dinero disponible</p>
-            <p class="h1">$ <?php echo number_format($usuario['saldo'], 0, ',', '.'); ?></p>
       </div>
-      <div class="transacciones">
-            <div onclick="showLoaderAndRedirect('transferir')">
-               <img src="../img/transferir.svg" alt="" />
-          <p class="hb">Transferir</p>
-        </div>
-            <div onclick="showLoaderAndRedirect('miqr.php')">
-               <img src="../img/qr.svg" alt="" />
-          <p class="hb">Tu QR</p>
-        </div>
-              <div <?php echo (!empty($entidad) && $entidad['tipo_entidad'] === 'Empresa') ? '' : 'style="display: none;"'; ?>>
+      <div class="right">
+        <a href="javascript:void(0);" onclick="showModalLogout()">
+          <img src="../img/salir.svg" alt="" class="salir" />
+        </a>
+      </div>
+    </nav>
+    <div class="dinero">
+      <p class="h2">Dinero disponible</p>
+      <p class="h1">$ <?php echo number_format($usuario['saldo'], 0, ',', '.'); ?></p>
+    </div>
+    <div class="transacciones">
+      <div onclick="showLoaderAndRedirect('transferir')">
+        <img src="../img/transferir.svg" alt="" />
+        <p class="hb">Transferir</p>
+      </div>
+      <div onclick="showLoaderAndRedirect('miqr.php')">
+        <img src="../img/qr.svg" alt="" />
+        <p class="hb">Tu QR</p>
+      </div>
+      <div <?php echo (!empty($entidad) && $entidad['tipo_entidad'] === 'Empresa') ? '' : 'style="display: none;"'; ?>>
         <a onclick="showLoaderAndRedirect('home_entidad/')">
           <img src="../img/empresa-black.svg" alt="" />
         </a>
         <p class="hb">Empresa</p>
       </div>
-      </div>
-      <div class="movimientos">
-        <p class="h2">Movimientos</p>
-        <div class="movimientos-container">
+    </div>
+    <div class="movimientos">
+      <p class="h2" id="h2">Movimientos</p>
+      <div class="movimientos-container">
+        <?php if ($movimientos): ?>
           <p class="fecha">Hoy</p>
-          <?php if ($movimientos): ?>
-               <?php foreach ($movimientos as $movimiento): ?>
-               <div class="movimiento">
-                  <div class="left">
-                     <?php
-                        $img_src = '../img/user.svg';
-                        
-                        // Verificar si el movimiento es un Prestamo o una Recarga
-                        if ($movimiento['tipo_movimiento'] == 'Prestamo' || $movimiento['tipo_movimiento'] == 'Recarga') {
-                            $img_src = '../img/bank.svg';
-                        }
-                        
-                        // Verificar si el destinatario o remitente es un banco o una empresa
-                        if ($movimiento['destinatario_tipo_entidad'] == 'Banco' || $movimiento['remitente_tipo_entidad'] == 'Banco') {
-                            $img_src = '../img/bank.svg';
-                        } elseif ($movimiento['destinatario_tipo_entidad'] == 'Empresa' || $movimiento['remitente_tipo_entidad'] == 'Empresa') {
-                            $img_src = '../img/company.svg';
-                        }
-                        ?>
-                     <img src="<?php echo htmlspecialchars($img_src); ?>" alt="Entidad" />
-                     <div>
-                        <p class="h4" id="h4">
-                           <?php
-                              $id_columna_remitente_usuario = $movimiento['id_remitente_usuario'];
-                              $id_columna_destinatario_usuario = $movimiento['id_destinatario_usuario'];
-                              $tipo_movimiento = $movimiento['tipo_movimiento'];
-                              
-                              // Definir las entidades
-                              $id_columna_remitente_entidad = ($movimiento['id_remitente_entidad'] === NULL) ? NULL : $movimiento['id_remitente_entidad'];
-                              $id_columna_destinatario_entidad = ($movimiento['id_destinatario_entidad'] === NULL) ? NULL : $movimiento['id_destinatario_entidad'];
-                              
-                              $nombre_remitente = $movimiento['remitente_nombre_apellido']; // Nombre completo del remitente
-                              $nombre_destinatario = $movimiento['destinatario_nombre_apellido']; // Nombre completo del destinatario
-                              
-                              // Determinar si el usuario es remitente o destinatario
-                              $accion = ''; // Variable para almacenar si fue "Enviaste" o "Recibiste"
-                              $mensaje = ''; // Inicializar variable para el mensaje
-                              
-                              if ($id_columna_remitente_usuario == $id_usuario) {
-                                  // El usuario es el remitente
-                                  $accion = "Egreso"; // Guardar "Egreso" en la variable
-                                  $mensaje = htmlspecialchars($nombre_destinatario); // Mostrar nombre del destinatario
-                                  
-                                  // Verificar si también hay entidad destinataria
-                                  if ($id_columna_destinatario_entidad !== NULL) {
-                                      $mensaje .= htmlspecialchars($movimiento['destinatario_nombre_entidad']); // Agregar entidad del destinatario
-                                  }
-                              
-                              } elseif ($id_columna_destinatario_usuario == $id_usuario) {
-                                  // El usuario es el destinatario
-                                  $accion = "Ingreso"; // Guardar "Ingreso" en la variable
-                                  $mensaje = htmlspecialchars($nombre_remitente); // Mostrar nombre del remitente
-                                  
-                                  // Verificar si también hay entidad remitente
-                                  if ($id_columna_remitente_entidad !== NULL) {
-                                      $mensaje .= htmlspecialchars($movimiento['remitente_nombre_entidad']); // Agregar entidad del remitente
-                                  }
-                              }
-                              
-                              // Mostrar el mensaje
-                              echo $mensaje . "\n";
-                              
-                              // Mostrar detalles adicionales del movimiento, como el tipo de movimiento
-                              ?>
-                        </p>
-                        <p class="hb" id="hb">
-                           <?php
-                              $descripcion_movimiento = '';
-                              $signo = '';
-                              
-                              if ($movimiento['tipo_movimiento'] == 'Prestamo') {
-                                  $descripcion_movimiento = "Préstamo";
-                                  $signo = "+";
-                              } elseif ($movimiento['tipo_movimiento'] == 'Recarga') {
-                                  $descripcion_movimiento = "Recarga de saldo";
-                                  $signo = "+";
-                              } elseif ($id_columna_remitente_usuario == $id_usuario) {
-                                  $descripcion_movimiento = "Transferencia enviada";
-                                  $signo = "-";
-                              } elseif ($id_columna_destinatario_usuario == $id_usuario) {
-                                  $descripcion_movimiento = "Transferencia recibida";
-                                  $signo = "+";
-                              } else {
-                                  $descripcion_movimiento = "Movimiento desconocido";
-                              }
-                              
-                              echo htmlspecialchars($descripcion_movimiento);
-                              ?>
-                        </p>
-                     </div>
-                  </div>
-                  <div class="right">
-                     <p class="h4 <?php echo ($id_columna_remitente_usuario == $id_usuario) ? 'text--minus' : 'text--plus'; ?>">
-                        <?php echo $signo . "$" . number_format(abs($movimiento['monto']), 0, ',', '.'); ?>
-                     </p>
-                     <p class="hb">
-                        <?php
-                           $fecha = new DateTime($movimiento['fecha']);
-                           echo $fecha->format('H:i');
-                           ?>
-                     </p>
-                  </div>
-               </div>
-               <?php endforeach; ?>
-               <?php else: ?>
-               <div style="text-align: center;">
-                  <p>No tienes movimientos todavía.</p>
-               </div>
-               <?php endif; ?>
-               <div class="container-btn">
-            <button class="btn-primary" onclick="window.location.href='./movimientos.php'">Historial</button>
-          </div>
-            </div>
-         </div>
-         <div class="background"></div>
-    </section>
-    <script>
-      function showLoaderAndRedirect(url) {
-        // Mostrar el loader
-        const loader = document.getElementById('loader');
-        loader.style.display = 'flex'; // Mostrar el loader
+          <?php foreach ($movimientos as $movimiento): ?>
+            <div class="movimiento">
+              <div class="left">
+                <?php
+                  $img_src = '../img/user.svg';
 
-        // Redirigir a la URL después de un pequeño retraso
-        setTimeout(function() {
-          window.location.href = url; // Redirigir a la página
-        }, 500); // Ajusta este tiempo según lo que necesites
-      }
-    </script>
-  </body>
+                  // Verificar si el movimiento es un Prestamo o una Recarga
+                  if ($movimiento['tipo_movimiento'] == 'Prestamo' || $movimiento['tipo_movimiento'] == 'Recarga') {
+                      $img_src = '../img/bank.svg';
+                  }
+
+                  // Verificar si el destinatario o remitente es un banco o una empresa
+                  if ($movimiento['destinatario_tipo_entidad'] == 'Banco' || $movimiento['remitente_tipo_entidad'] == 'Banco') {
+                      $img_src = '../img/bank.svg';
+                  } elseif ($movimiento['destinatario_tipo_entidad'] == 'Empresa' || $movimiento['remitente_tipo_entidad'] == 'Empresa') {
+                      $img_src = '../img/company.svg';
+                  }
+                ?>
+                <img src="<?php echo htmlspecialchars($img_src); ?>" alt="Entidad" />
+                <div>
+                  <p class="h4" id="h4">
+                    <?php
+                      $id_columna_remitente_usuario = $movimiento['id_remitente_usuario'];
+                      $id_columna_destinatario_usuario = $movimiento['id_destinatario_usuario'];
+                      $tipo_movimiento = $movimiento['tipo_movimiento'];
+
+                      // Definir las entidades
+                      $id_columna_remitente_entidad = ($movimiento['id_remitente_entidad'] === NULL) ? NULL : $movimiento['id_remitente_entidad'];
+                      $id_columna_destinatario_entidad = ($movimiento['id_destinatario_entidad'] === NULL) ? NULL : $movimiento['id_destinatario_entidad'];
+
+                      $nombre_remitente = $movimiento['remitente_nombre_apellido']; // Nombre completo del remitente
+                      $nombre_destinatario = $movimiento['destinatario_nombre_apellido']; // Nombre completo del destinatario
+
+                      // Determinar si el usuario es remitente o destinatario
+                      $accion = ''; // Variable para almacenar si fue "Enviaste" o "Recibiste"
+                      $mensaje = ''; // Inicializar variable para el mensaje
+
+                      if ($id_columna_remitente_usuario == $id_usuario) {
+                          // El usuario es el remitente
+                          $accion = "Egreso"; // Guardar "Egreso" en la variable
+                          $mensaje = htmlspecialchars($nombre_destinatario); // Mostrar nombre del destinatario
+
+                          // Verificar si también hay entidad destinataria
+                          if ($id_columna_destinatario_entidad !== NULL) {
+                              $mensaje .= htmlspecialchars($movimiento['destinatario_nombre_entidad']); // Agregar entidad del destinatario
+                          }
+                      } elseif ($id_columna_destinatario_usuario == $id_usuario) {
+                          // El usuario es el destinatario
+                          $accion = "Ingreso"; // Guardar "Ingreso" en la variable
+                          $mensaje = htmlspecialchars($nombre_remitente); // Mostrar nombre del remitente
+
+                          // Verificar si también hay entidad remitente
+                          if ($id_columna_remitente_entidad !== NULL) {
+                              $mensaje .= htmlspecialchars($movimiento['remitente_nombre_entidad']); // Agregar entidad del remitente
+                          }
+                      }
+
+                      // Mostrar el mensaje
+                      echo $mensaje . "\n";
+                    ?>
+                  </p>
+                  <p class="hb" id="hb">
+                    <?php
+                      $descripcion_movimiento = '';
+                      $signo = '';
+
+                      if ($movimiento['tipo_movimiento'] == 'Prestamo') {
+                          $descripcion_movimiento = "Préstamo";
+                          $signo = "+";
+                      } elseif ($movimiento['tipo_movimiento'] == 'Recarga') {
+                          $descripcion_movimiento = "Recarga de saldo";
+                          $signo = "+";
+                      } elseif ($id_columna_remitente_usuario == $id_usuario) {
+                          $descripcion_movimiento = "Transferencia enviada";
+                          $signo = "-";
+                      } elseif ($id_columna_destinatario_usuario == $id_usuario) {
+                          $descripcion_movimiento = "Transferencia recibida";
+                          $signo = "+";
+                      } else {
+                          $descripcion_movimiento = "Movimiento desconocido";
+                      }
+
+                      echo htmlspecialchars($descripcion_movimiento);
+                    ?>
+                  </p>
+                </div>
+              </div>
+              <div class="right">
+                <p class="h4 <?php echo ($id_columna_remitente_usuario == $id_usuario) ? 'text--minus' : 'text--plus'; ?>">
+                  <?php echo $signo . "$" . number_format(abs($movimiento['monto']), 0, ',', '.'); ?>
+                </p>
+                <p class="hb">
+                  <?php
+                    $fecha = new DateTime($movimiento['fecha']);
+                    echo $fecha->format('H:i');
+                  ?>
+                </p>
+              </div>
+            </div>
+          <?php endforeach; ?>
+
+          <!-- Mostrar el botón solo si hay 3 o más movimientos (fuera del foreach) -->
+          <?php if (count($movimientos) >= 3): ?>
+            <div class="container-btn">
+              <button class="btn-primary" onclick="window.location.href='./movimientos.php'">Historial de movimientos</button>
+            </div>
+          <?php endif; ?>
+
+        <?php else: ?>
+          <div style="text-align: center;">
+            <p class="h2 text--light" style="display: block;">Todavía no tenes ningún movimiento.</p>
+          </div>
+        <?php endif; ?>
+      </div>
+    </div>
+    <div class="background"></div>
+  </section>
+
+  <div class="bg-ventana-modal">
+    <div class="ventana-modal">
+      <p class="h2 text--darkblue">Estás por salir de tu cuenta.</p>
+      <div>
+        <button class="btn-modal-1 h3 text--blue" onclick="hideModalLogout()">Cancelar</button>
+        <button class="btn-modal-2 h3" onclick="logout()" style="width: 149px;">Cerrar sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showLoaderAndRedirect(url) {
+      // Mostrar el loader
+      const loader = document.getElementById('loader');
+      loader.style.display = 'flex'; // Mostrar el loader
+
+      // Redirigir a la URL después de un pequeño retraso
+      setTimeout(function() {
+        window.location.href = url; // Redirigir a la página
+      }, 1000); // Ajusta este tiempo según lo que necesites
+    }
+
+    function showModalLogout() {
+      document.querySelector('.bg-ventana-modal').style.display = 'flex';
+    }
+
+    function hideModalLogout() {
+      document.querySelector('.bg-ventana-modal').style.display = 'none';
+    }
+
+    function logout() {
+      // Redirigir al logout cuando se confirme la salida
+      window.location.href = '../logout.php';
+    }
+  </script>
+</body>
 </html>

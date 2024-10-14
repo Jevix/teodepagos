@@ -170,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </section>
     </section>
 
-    <script src="../assets/js/login.js"></script>
+    <script src="../assets/js/login.js?v=<?= time(); ?>"></script>
 
     <script>
       document.addEventListener("DOMContentLoaded", function() {

@@ -38,7 +38,7 @@ LEFT JOIN entidades AS destinatario_entidad ON ms.id_destinatario_entidad = dest
 LEFT JOIN usuarios AS destinatario_usuario ON ms.id_destinatario_usuario = destinatario_usuario.id_usuario
 WHERE ms.id_remitente_entidad = :id_entidad OR ms.id_destinatario_entidad = :id_entidad
 ORDER BY ms.fecha DESC
-LIMIT 5;
+LIMIT 3;
 ");
 $stmt->execute(['id_entidad' => $id_entidad]);
 $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -69,17 +69,57 @@ $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
       }
         /* Estilos para el loader */
-      .loader {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 9999; /* Asegúrate de que el loader esté por encima de todo */
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        .bg-ventana-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro semitransparente */
+    backdrop-filter: blur(10px); /* Aplicar el desenfoque al fondo */
+    display: none; /* Ocultar por defecto */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Asegurarse de que esté por encima de todo */
+}
+
+.ventana-modal {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 1001; /* El modal debe estar por encima del fondo */
+}
+
+.loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7); /* Fondo blanco semitransparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+
+      #h4 {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 190px; /* Ajusta el ancho según sea necesario */
       }
+      #hb {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 160px; /* Ajusta el ancho aquí según sea necesario */
+      }
+      
+      
 
     </style>
   <body>
@@ -147,10 +187,10 @@ $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php endif; ?>
 </div>
       <div class="movimientos">
-        <p class="h2">Movimientos</p>
+        <p class="h2" style="color: #172146;">Movimientos</p>
         <div class="movimientos-container">
-          <p class="fecha">Hoy</p>
           <?php if ($movimientos): ?>
+            <p class="fecha">Hoy</p>
     <?php foreach ($movimientos as $movimiento): ?>
         <div class="movimiento">
             <div class="left">
@@ -178,7 +218,7 @@ $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 ?>
                 <img src="<?php echo htmlspecialchars($img_src); ?>" alt="Entidad" />
                 <div>
-                    <p class="h4">
+                    <p class="h4" id="h4">
                         <?php
                         $id_columna_remitente_usuario = $movimiento['id_remitente_usuario'];
                         $id_columna_remitente_entidad = $movimiento['id_remitente_entidad'];
@@ -249,17 +289,19 @@ $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
     <?php endforeach; ?>
-<?php else: ?>
-    <div style="text-align: center;">
-        <p>No tienes movimientos todavía.</p>
-    </div>
-<?php endif; ?>
-<div class="container-btn">
-            <button class="btn-primary" onclick="window.location.href='./movimientos.php'">Historial</button>
+    <?php if (count($movimientos) >= 3): ?>
+            <div class="container-btn">
+              <button class="btn-primary" onclick="window.location.href='./movimientos.php'">Historial de movimientos</button>
+            </div>
+          <?php endif; ?>
+          <?php else: ?>
+          <div style="text-align: center;">
+            <p class="h2 text--light" style="display: block;">Todavía no tenes ningún movimiento.</p>
           </div>
-        </div>
+        <?php endif; ?>
       </div>
-      <div class="background"></div>
+    </div>
+    <div class="background"></div>
     </section>
     <script>
       function showLoaderAndRedirect(url) {

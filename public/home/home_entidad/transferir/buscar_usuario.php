@@ -102,6 +102,22 @@ if ($dniNombre) {
       .recomendaciones.show {
         display: block;
       }
+      .componente--input--lupa {
+  background: url("../../../img/search.svg") no-repeat 20px center !important;
+}
+#h4 {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 190px; /* Ajusta el ancho según sea necesario */
+      }
+      #hb {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 160px; /* Ajusta el ancho aquí según sea necesario */
+      }
+      
     </style>
 </head>
 <body>
@@ -151,39 +167,44 @@ if ($dniNombre) {
 
         <!-- Historial de transferencias -->
         <div class="container-anteriores" id="historialTransferencias">
-            <p class="h2">Anteriores transferencias</p>
             <?php if (!empty($movimientos)): ?>
+                <p class="h2">Anteriores transferencias</p>
                 <?php foreach ($movimientos as $movimiento): ?>
-                    <div class="componente--usuario" onclick="redirigir(
-                        '<?php echo (!empty($movimiento['destinatario_identificador'])) ? 'usuario' : 'entidad'; ?>', 
-                        '<?php echo htmlspecialchars($movimiento['destinatario_identificador']); ?>', 
-                        '<?php echo htmlspecialchars($movimiento['monto']); ?>')">
-                        <div class="left">
-                            <?php if (!empty($movimiento['destinatario_identificador'])): ?>
-                                <!-- Verificar la longitud del identificador para determinar si es usuario o entidad -->
-                                <?php if (strlen($movimiento['destinatario_identificador']) === 8): ?>
-                                    <img src="../../../img/user.svg" alt="Usuario" />
-                                <?php elseif (strlen($movimiento['destinatario_identificador']) === 11): ?>
-                                    <!-- Verificar si la entidad es un banco o una empresa -->
-                                    <?php if ($movimiento['destinatario_tipo_entidad'] === 'Banco'): ?>
-                                        <img src="../../../img/bank.svg" alt="Banco" />
-                                    <?php else: ?>
-                                        <img src="../../../img/empresa.svg" alt="Empresa" />
-                                    <?php endif; ?>
-                                <?php endif; ?>
-                                <div>
-                                    <p class="h5"><?php echo htmlspecialchars($movimiento['destinatario_nombre']); ?></p>
-                                    <p class="hb">ID: <?php echo htmlspecialchars($movimiento['destinatario_identificador']); ?></p>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="right">
-                            <p class="h4 text--blue">$<?php echo number_format($movimiento['monto'], 0, ',', '.'); ?></p>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
+    <div class="componente--usuario" onclick="redirigir(
+        '<?php echo (strlen($movimiento['destinatario_identificador']) === 8) ? 'usuario' : 'entidad'; ?>', 
+        '<?php echo htmlspecialchars($movimiento['destinatario_identificador']); ?>', 
+        '<?php echo htmlspecialchars($movimiento['monto']); ?>')">
+        <div class="left">
+            <?php if (!empty($movimiento['destinatario_identificador'])): ?>
+                <!-- Verificar la longitud del identificador para determinar si es usuario o entidad -->
+                <?php if (strlen($movimiento['destinatario_identificador']) === 8): ?>
+                    <img src="../../../img/user.svg" alt="Usuario" />
+                <?php elseif (strlen($movimiento['destinatario_identificador']) === 11): ?>
+                    <!-- Verificar si la entidad es un banco o una empresa -->
+                    <?php if ($movimiento['destinatario_tipo_entidad'] === 'Banco'): ?>
+                        <img src="../../../img/bank.svg" alt="Banco" />
+                    <?php else: ?>
+                        <img src="../../../img/empresa.svg" alt="Empresa" />
+                    <?php endif; ?>
+                <?php endif; ?>
+                <div>
+                    <p class="h5" id="h4"><?php echo htmlspecialchars($movimiento['destinatario_nombre']); ?></p>
+                    <p class="hb">ID: <?php echo htmlspecialchars($movimiento['destinatario_identificador']); ?></p>
+                </div>
+            <?php endif; ?>
+        </div>
+        <div class="right">
+            <p class="h4 text--blue">$<?php echo number_format($movimiento['monto'], 0, ',', '.'); ?></p>
+        </div>
+    </div>
+<?php endforeach; ?>
             <?php else: ?>
-                <p>No hay transferencias anteriores</p>
+                <div class="ningun-movimiento">
+  <div class="ningunsub-movimiento">
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 50%;"><path d="M20 28.3334V18.3334" stroke="black" stroke-width="2.5" stroke-linecap="round"/><path d="M19.9999 11.6667C20.9204 11.6667 21.6666 12.4129 21.6666 13.3333C21.6666 14.2538 20.9204 15 19.9999 15C19.0794 15 18.3333 14.2538 18.3333 13.3333C18.3333 12.4129 19.0794 11.6667 19.9999 11.6667Z" fill="black"/><path d="M3.33325 20C3.33325 12.1434 3.33325 8.21504 5.77325 5.77337C8.21659 3.33337 12.1433 3.33337 19.9999 3.33337C27.8566 3.33337 31.7849 3.33337 34.2249 5.77337C36.6666 8.21671 36.6666 12.1434 36.6666 20C36.6666 27.8567 36.6666 31.785 34.2249 34.225C31.7866 36.6667 27.8566 36.6667 19.9999 36.6667C12.1433 36.6667 8.21492 36.6667 5.77325 34.225C3.33325 31.7867 3.33325 27.8567 3.33325 20Z" stroke="black" stroke-width="2.5"/></svg>
+    <p class="h2 text--light" style="color: #17214680; margin-top: 10px;">Todavía no tenes ningún movimiento.</p>
+  </div>
+</div>
             <?php endif; ?>
         </div>
         <div class="background"></div>

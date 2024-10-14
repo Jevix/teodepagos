@@ -7,17 +7,41 @@ if (!isset($_SESSION['id_usuario'])) {
     exit; 
 }
 
+// Incluir la configuración y la clase Database
+require '../../../src/Models/Database.php';
+$config = require '../../../config/config.php';
+$db = new Database($config['db_host'], $config['db_name'], $config['db_user'], $config['db_pass']);
+$pdo = $db->getConnection();
+
 // Verificar si se ha pasado el monto y el nombre del destinatario
 if (!isset($_POST['monto']) || (!isset($_POST['dni']) && !isset($_POST['cuit']))) {
     die("Datos incompletos para mostrar la confirmación.");
 }
 
 $monto = htmlspecialchars($_POST['monto']);
-$fecha = date('d/m H:i');  // Formato de fecha y hora
+date_default_timezone_set('America/Argentina/Buenos_Aires');
+$fecha = date('d/m H:i'); 
 $nombre = isset($_POST['nombre']) ? htmlspecialchars($_POST['nombre']) : '';
 $dni = isset($_POST['dni']) ? htmlspecialchars($_POST['dni']) : '';
 $cuit = isset($_POST['cuit']) ? htmlspecialchars($_POST['cuit']) : '';
 $nombre_entidad = isset($_POST['nombre_entidad']) ? htmlspecialchars($_POST['nombre_entidad']) : '';
+
+// Si hay un CUIT, buscar el nombre de la entidad en la base de datos
+if ($cuit) {
+    try {
+        $stmt = $pdo->prepare("SELECT nombre_entidad FROM entidades WHERE cuit = :cuit");
+        $stmt->execute(['cuit' => $cuit]);
+        $entidad = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($entidad) {
+            $nombre_entidad = $entidad['nombre_entidad'];  // Actualizar el nombre de la entidad con el resultado de la consulta
+        } else {
+            throw new Exception("Entidad no encontrada.");
+        }
+    } catch (Exception $e) {
+        die("Error al buscar el nombre de la entidad: " . $e->getMessage());
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -71,7 +95,7 @@ $nombre_entidad = isset($_POST['nombre_entidad']) ? htmlspecialchars($_POST['nom
                   <p class="h4"><?= $nombre; ?></p>
                   <p class="hb">DNI: <?= $dni; ?></p>
                 <?php elseif ($cuit): ?>
-                  <p class="h4"><?= $nombre_entidad; ?></p>
+                  <p class="h4"><?= $nombre_entidad; ?></p> <!-- Aquí mostramos el nombre de la entidad -->
                   <p class="hb">CUIT: <?= $cuit; ?></p>
                 <?php endif; ?>
               </div>
@@ -81,7 +105,7 @@ $nombre_entidad = isset($_POST['nombre_entidad']) ? htmlspecialchars($_POST['nom
         <div class="container-exito-3">
           <button
             class="btn-primary"
-            onclick="redireccionar('index.php')"
+            onclick="redireccionar('buscar_usuario.php')"
           >
             Volver a transferir
           </button>

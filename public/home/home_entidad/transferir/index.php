@@ -38,11 +38,11 @@ if (!isset($_SESSION['id_usuario'])) {
           class="btn-primary"
           onclick="window.location.href='buscar_usuario.php'"
         >
-          Buscar usuario <img src="../img/account-white.svg" alt="" />
+          Buscar usuario <img src="../../../img/account-white.svg" alt="" />
         </button>
         <button class="btn-primary"
         onclick="window.location.href='escanear_qr.php'">
-          Escanear QR <img src="../img/qr-white.svg" alt="" />
+          Escanear QR <img src="../../../img/qr-white.svg" alt="" />
         </button>
         <div class="background"></div>
       </div>

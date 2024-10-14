@@ -22,7 +22,8 @@ $saldo_sesion = 0;  // Saldo de la entidad logueada (sesión activa)
 $nombre_destinatario = '';
 $tipo_destinatario = '';  // Puede ser 'usuario' o 'entidad'
 $dni = isset($_GET['dni']) ? htmlspecialchars($_GET['dni']) : '';
-$monto = isset($_GET['monto']) ? htmlspecialchars($_GET['monto']) : '';  // Monto es opcional
+$cuit = isset($_GET['cuit']) ? htmlspecialchars($_GET['cuit']) : '';
+$monto = isset($_GET['monto']) ? htmlspecialchars($_GET['monto']) : '0';  // Monto es opcional
 
 // Verificar si se ha iniciado sesión y obtener el saldo de la entidad logueada
 if ($entidad_sesion_id) {
@@ -45,7 +46,7 @@ if ($entidad_sesion_id) {
 }
 
 // Lógica para buscar en la tabla correcta según la longitud del identificador (DNI)
-if (!empty($dni)) {
+if (!empty($dni) || !empty($cuit)) {
     // Verificar si es un DNI (8 dígitos) o un CUIT (11 dígitos)
     if (strlen($dni) === 8) {
         // Buscar en la tabla 'usuarios' por DNI
@@ -63,11 +64,11 @@ if (!empty($dni)) {
         } catch (PDOException $e) {
             die("Error en la búsqueda del usuario: " . $e->getMessage());
         }
-    } elseif (strlen($dni) === 11) {
+    } elseif (strlen($cuit) === 11) {
         // Buscar en la tabla 'entidades' por CUIT
         try {
             $stmtEntidad = $pdo->prepare("SELECT nombre_entidad FROM entidades WHERE cuit = :cuit");
-            $stmtEntidad->execute(['cuit' => $dni]);
+            $stmtEntidad->execute(['cuit' => $cuit]);
             $entidad = $stmtEntidad->fetch(PDO::FETCH_ASSOC);
 
             if ($entidad) {
@@ -105,6 +106,7 @@ if (!empty($dni)) {
       body {
         background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
       }
+      
       .loader {
           position: fixed;
           top: 0;
@@ -139,6 +141,7 @@ if (!empty($dni)) {
       .bounce { 
           animation: bounce 0.5s ease;
       }
+      
     </style>
 </head>
 <body>
@@ -161,7 +164,7 @@ if (!empty($dni)) {
             <p class="hb">DNI: <?= htmlspecialchars($dni); ?></p>
             </div>
           <?php elseif ($tipo_destinatario == 'entidad'): ?>
-            <p class="hb">CUIT: <?= htmlspecialchars($dni); ?></p>
+            <p class="hb">CUIT: <?= htmlspecialchars($cuit); ?></p>
             </div>
           <?php endif; ?>
         </div>
@@ -199,6 +202,7 @@ if (!empty($dni)) {
         class="btn-primary submit--off"
         id="submitButton"
         onclick="transferir()"
+        style="margin-top: 0px !important;"
         disabled
       >
         Transferir
@@ -239,24 +243,40 @@ if (!empty($dni)) {
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-      window.scrollTo(0, document.body.scrollHeight);
+    // Desplazar la ventana hacia abajo
+    window.scrollTo(0, document.body.scrollHeight);
 
-      const montoUrl = "<?= isset($_GET['monto']) ? $_GET['monto'] : ''; ?>";
-      const display = document.getElementById("display");
-      const submitButton = document.getElementById("submitButton");
+    // Obtener el monto de la URL si está presente
+    const montoUrl = "<?= isset($_GET['monto']) ? $_GET['monto'] : ''; ?>";
+    const display = document.getElementById("display");
+    const submitButton = document.getElementById("submitButton");
 
-      if (montoUrl && parseInt(montoUrl) > 0) {
-          display.textContent = montoUrl.replace(/\B(?=(\d{3})+(?!\d))/g, "."); 
-          submitButton.classList.remove("submit--off");
-          submitButton.classList.add("submit--on");
-          submitButton.disabled = false;
-      } else {
-          submitButton.classList.remove("submit--on");
-          submitButton.classList.add("submit--off");
-          submitButton.disabled = true;
-      }
-    });
+    // Comprobar el saldo de la sesión
+    const saldoDisponible = <?= json_encode($saldo_sesion); ?>; // El saldo de la sesión se pasa como variable PHP
+    const dineroDisponible = document.getElementById('dineroDisponible'); // Elemento que muestra el saldo disponible
 
+    if (montoUrl && parseInt(montoUrl) > 0) {
+        // Formatear el monto si es mayor a 0
+        display.textContent = montoUrl.replace(/\B(?=(\d{3})+(?!\d))/g, "."); 
+        const montoNumerico = parseInt(montoUrl.replace(/\./g, ''), 10); // Monto convertido a número
+
+        // Habilitar o deshabilitar el botón según el saldo
+        if (montoNumerico <= saldoDisponible) {
+            submitButton.classList.remove("submit--off");
+            submitButton.classList.add("submit--on");
+            submitButton.disabled = false;
+        } else {
+            submitButton.classList.remove("submit--on");
+            submitButton.classList.add("submit--off");
+            submitButton.disabled = true;
+            dineroDisponible.classList.add('texto-rojo', 'bounce'); // Añadir animación si el saldo es insuficiente
+        }
+    } else {
+        submitButton.classList.remove("submit--on");
+        submitButton.classList.add("submit--off");
+        submitButton.disabled = true;
+    }
+});
     function toggleBtn() {
       let valorDisplay = display.textContent.replace(/\./g, '');
       const montoNumerico = parseInt(valorDisplay, 10); 
@@ -288,7 +308,7 @@ if (!empty($dni)) {
 
       const monto = display.textContent.replace(/\./g, '');  // Monto del input de pantalla
       const urlParams = new URLSearchParams(window.location.search);
-      const identificador = urlParams.get('dni') || '';  // Esto debería ser 'identificador' en el POST
+      const identificador = urlParams.get('dni') || urlParams.get('cuit') || '';  // Verifica ambos
 
       loader.style.display = "flex";
 

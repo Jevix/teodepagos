@@ -21,7 +21,7 @@ $pdo = $db->getConnection();
 
 // Verificar si se recibió el identificador (DNI o CUIT)
 if (!isset($_POST['identificador'])) {
-    header('Location: ../../index.php');
+    header('Location: ../index.php');
     exit;
 }
 

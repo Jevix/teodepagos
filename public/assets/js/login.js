@@ -3,10 +3,10 @@ document
 .addEventListener("click", function () {
   var input = document.getElementById("password");
   if (this.src.includes("viendo.svg")) {
-    this.src = "./img/censurado.svg";
+    this.src = "../img/censurado.svg";
     input.type = "text";
   } else {
-    this.src = "./img/viendo.svg";
+    this.src = "../img/viendo.svg";
     input.type = "password";
   }
 });

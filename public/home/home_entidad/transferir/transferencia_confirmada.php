@@ -26,13 +26,14 @@ if (strlen($identificador) === 8) {
     die("El identificador debe ser un DNI (8 dígitos) o CUIT (11 dígitos).");
 }
 
-// La fecha es opcional, si no está presente, puedes definirla por defecto
-$fecha = isset($_POST['fecha']) ? htmlspecialchars($_POST['fecha']) : date("Y-m-d H:i:s");
+// Establecer la zona horaria de Argentina
+date_default_timezone_set('America/Argentina/Buenos_Aires');
+$fecha = date('d/m H:i'); 
 
-// El nombre del destinatario
+// El nombre del destinatario (puede ser usuario o entidad)
 $nombre = isset($_POST['nombre']) ? htmlspecialchars($_POST['nombre']) : '';
 
-// Aquí defino una variable adicional para el nombre de la entidad (si es CUIT)
+// Variable adicional para el nombre de la entidad (si es CUIT)
 $nombre_entidad = isset($_POST['nombre_entidad']) ? htmlspecialchars($_POST['nombre_entidad']) : '';
 
 ?>
@@ -99,7 +100,7 @@ $nombre_entidad = isset($_POST['nombre_entidad']) ? htmlspecialchars($_POST['nom
         <div class="container-exito-3">
           <button
             class="btn-primary"
-            onclick="redireccionar('index.php')"
+            onclick="redireccionar('buscar_usuario.php')"
           >
             Volver a transferir
           </button>
