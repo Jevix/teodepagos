@@ -30,6 +30,7 @@ $nombre = $_POST['nombre'] ?? 'N/A';
 $apellido = $_POST['apellido'] ?? 'N/A';
 $dni = $_POST['dni'] ?? 'N/A';
 $fechaNacimiento = $_POST['fechaNacimiento'] ?? 'N/A';
+$nombreEntidad = $_POST['nombre_entidad'] ?? 'N/A';
 ?>
 
 <!DOCTYPE html>
@@ -59,24 +60,43 @@ $fechaNacimiento = $_POST['fechaNacimiento'] ?? 'N/A';
           <p class="h2">Cuenta creada correctamente</p>
         </div>
         <div class="container-datos">
+          <div>
+
+
+          </div>
           <div class="datos-transferencia">
             <p class="h2 left">Tipo de cuenta:</p>
-            <p class="h2 right"><img src="../img/user.svg" alt=""><?= htmlspecialchars($tipo_cuenta); ?></p>
+            <p class="h2 right"><?php
+
+            if ($tipo_cuenta === 'Usuario') {
+             echo ('<img src="../../img/user.svg" alt="">');
+            } elseif ($tipo_cuenta === 'Banco') {
+              echo ('<img src="../../img/banco.svg" alt="">');
+            }
+            
+            ?>
+            <?= htmlspecialchars($tipo_cuenta); ?></p>
           </div>
-          <div class="datos-transferencia">
-            <p class="h2 left">Nombre</p>
-            <p class="h2 right"><?= htmlspecialchars($nombre); ?></p>
-          </div>
-          <div class="datos-transferencia">
-            <p class="h2 left">Apellido</p>
-            <p class="h2 right"><?= htmlspecialchars($apellido); ?></p>
-          </div>
+          <?php
+         if ($nombreEntidad !== 'N/A') {
+            echo ('<div class="datos-transferencia"><p class="h2 left">Entidad:</p><p class="h2 right">' . $nombreEntidad . '</p></div>');
+          }
+          ?>
+           <?php
+
+          if ($nombreEntidad == 'N/A') {
+            echo ('<div class="datos-transferencia"><p class="h2 left">Nombre</p><p class="h2 right">' . $nombre . '</p></div>');
+            echo ('<div class="datos-transferencia"><p class="h2 left">Apellido</p><p class="h2 right">' . $apellido . '</p></div>');
+          }
+
+          ?>
+          
           <div class="datos-transferencia">
             <p class="h2 left">DNI</p>
             <p class="h2 right"><?= htmlspecialchars($dni); ?></p>
           </div>
           <div class="datos-transferencia">
-            <p class="h2 left">Password</p>
+            <p class="h2 left">Contraseña</p>
             <p class="h2 right"><?= htmlspecialchars($fechaNacimiento); ?></p>
           </div>
         </div>

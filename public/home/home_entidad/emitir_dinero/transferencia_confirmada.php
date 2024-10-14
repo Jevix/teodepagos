@@ -27,7 +27,10 @@ if (strlen($identificador) === 8) {
 }
 
 // La fecha es opcional, si no está presente, puedes definirla por defecto
-$fecha = isset($_POST['fecha']) ? htmlspecialchars($_POST['fecha']) : date("Y-m-d H:i:s");
+
+date_default_timezone_set('America/Argentina/Buenos_Aires');
+$fecha = date('d/m H:i'); 
+
 
 // El nombre del destinatario
 $nombre = isset($_POST['nombre']) ? htmlspecialchars($_POST['nombre']) : '';

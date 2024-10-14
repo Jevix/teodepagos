@@ -79,7 +79,7 @@ try {
       }
     </style>
 </head>
-<body>
+<body onload="inicializarBoton();">
   <section class="main">
     <nav class="navbar">
       <a href="buscar_usuario.php">
@@ -148,6 +148,11 @@ try {
   <script>
     const display = document.getElementById("display");
     const submitButton = document.getElementById("submitButton");
+
+    // Función para verificar si el monto inicial es mayor que 0 y habilitar el botón
+    function inicializarBoton() {
+      toggleBtn();  // Verifica el valor inicial del display
+    }
 
     function agregarNum(number) {
       let value = display.textContent;
