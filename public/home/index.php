@@ -263,30 +263,40 @@
                               echo $mensaje . "\n";
                               ?>
                         </p>
-                        <p class="h4 <?php echo ($id_columna_remitente_usuario == $id_usuario) ? 'text--minus' : 'text--plus'; ?>">
-                           <?php
-                           $descripcion_movimiento = '';
-                           $signo = '';
-                           
-                           if ($movimiento['tipo_movimiento'] == 'Prestamo') {
-                               $descripcion_movimiento = "Préstamo";
-                               $signo = "+";
-                           } elseif ($movimiento['tipo_movimiento'] == 'Recarga') {
-                               $descripcion_movimiento = "Recarga de saldo";
-                               $signo = "+";
-                           } elseif ($id_columna_remitente_usuario == $id_usuario) {
-                               $descripcion_movimiento = "Transferencia enviada";
-                               $signo = "-";
-                           } elseif ($id_columna_destinatario_usuario == $id_usuario) {
-                               $descripcion_movimiento = "Transferencia recibida";
-                               $signo = "+";
-                           } else {
-                               $descripcion_movimiento = "Movimiento desconocido";
-                           }
-                           
-                           
-                           echo $signo . "$" . number_format(abs($movimiento['monto']), 0, ',', '.'); ?>
-                        </p>
+                                             <p class="h4 <?php 
+                        if ($movimiento['tipo_movimiento'] == 'Error') {
+                           echo 'text--minus';
+                        } else {
+                           echo ($id_columna_remitente_usuario == $id_usuario) ? 'text--minus' : 'text--plus';
+                        }
+                     ?>">
+                        <?php
+                        $descripcion_movimiento = '';
+                        $signo = '';
+
+                        if ($movimiento['tipo_movimiento'] == 'Prestamo') {
+                           $descripcion_movimiento = "Préstamo";
+                           $signo = "+";
+                        } elseif ($movimiento['tipo_movimiento'] == 'Error') {
+                           $descripcion_movimiento = "Error Bancario";
+                           $signo = "-";
+                        } elseif ($movimiento['tipo_movimiento'] == 'Recarga') {
+                           $descripcion_movimiento = "Recarga de saldo";
+                           $signo = "+";
+                        } elseif ($id_columna_remitente_usuario == $id_usuario) {
+                           $descripcion_movimiento = "Transferencia enviada";
+                           $signo = "-";
+                        } elseif ($id_columna_destinatario_usuario == $id_usuario) {
+                           $descripcion_movimiento = "Transferencia recibida";
+                           $signo = "+";
+                        } else {
+                           $descripcion_movimiento = "Movimiento desconocido";
+                        }
+
+                        echo $signo . "$" . number_format(abs($movimiento['monto']), 0, ',', '.');
+                        ?>
+                     </p>
+
                      </div>
                      <div class="abajo">
                         <p class="hb" id="hb">

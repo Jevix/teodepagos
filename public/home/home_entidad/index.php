@@ -244,6 +244,9 @@
                           } elseif ($movimiento['tipo_movimiento'] == 'Recarga') {
                               $descripcion_movimiento = "Recarga de saldo";
                               $signo = "+";
+                          } elseif ($movimiento['tipo_movimiento'] == 'Error') {
+                              $descripcion_movimiento = "Error Bancario";
+                              $signo = "-";
                           } elseif ($movimiento['id_remitente_entidad'] == $id_entidad) {
                               $descripcion_movimiento = "Transferencia enviada";
                               $signo = "-";
@@ -251,8 +254,14 @@
                               $descripcion_movimiento = "Transferencia recibida";
                               $signo = "+";
                           }
-                          
-                          echo ($movimiento['id_remitente_entidad'] == $id_entidad) ? 'text--minus' : 'text--plus'; ?>">
+                          if ($movimiento['tipo_movimiento'] == 'Error') {
+                           $clase_css = 'text--minus'; // Aplicar 'text--minus' si es un Error
+                           echo $clase_css;
+                        }else{
+                          echo ($movimiento['id_remitente_entidad'] == $id_entidad) ? 'text--minus' : 'text--plus';    }?>">
+                       
+
+
                           <?php echo $signo . "$" . number_format(abs($movimiento['monto']), 0, ',', '.'); ?>
                      </p>
                      </div>

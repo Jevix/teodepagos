@@ -199,7 +199,7 @@ if ($dniNombre) {
                                 <?php endif; ?>
                                 <div>
                                     <p class="h5"><?php echo htmlspecialchars($movimiento['destinatario_nombre']); ?></p>
-                                    <p class="hb">ID: <?php echo htmlspecialchars($movimiento['destinatario_identificador']); ?></p>
+                                    <p class="hb">DN: <?php echo htmlspecialchars($movimiento['destinatario_identificador']); ?></p>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -244,9 +244,9 @@ if ($dniNombre) {
     function redirigir(tipo, valor, monto) {
         let montoFormateado = parseInt(monto).toLocaleString('de-DE');
         if (tipo === 'usuario') {
-            window.location.href = `tipo_transferencia.php?dni=${valor}&monto=${montoFormateado}`;
+            window.location.href = `tipo_transferencia.php?identificador=${valor}&monto=${montoFormateado}`;
         } else if (tipo === 'entidad') {
-            window.location.href = `tipo_transferencia.php?dni=${valor}&monto=${montoFormateado}`;
+            window.location.href = `tipo_transferencia.php?identificador=${valor}&monto=${montoFormateado}`;
         }
     }
 </script>

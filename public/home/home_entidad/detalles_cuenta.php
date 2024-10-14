@@ -42,11 +42,11 @@ $id = isset($_GET['id']) ? $_GET['id'] : null;
 if ($id) {
     // Consulta para obtener los detalles de la cuenta (usuario o entidad)
     $query = "
-        SELECT nombre_apellido AS nombre, dni AS identificador, saldo, password, 'usuario' AS tipo 
+        SELECT nombre_apellido AS nombre, dni AS identificador, id_usuario AS id, saldo, password, 'usuario' AS tipo 
         FROM usuarios 
         WHERE dni = :id
         UNION
-        SELECT nombre_entidad AS nombre, cuit AS identificador, saldo, 'N/A' AS password, tipo_entidad AS tipo 
+        SELECT nombre_entidad AS nombre, cuit AS identificador, id_entidad AS id, saldo, 'N/A' AS password, tipo_entidad AS tipo 
         FROM entidades 
         WHERE cuit = :id
     ";
@@ -62,8 +62,62 @@ if (!$cuenta) {
     echo "Cuenta no encontrada.";
     exit;
 }
-?>
 
+// Obtener el nuevo saldo del formulario si se ha enviado
+$error_message = '';
+
+if (isset($_POST['nuevo_saldo'])) {
+    $nuevo_saldo = floatval($_POST['nuevo_saldo']);
+    $saldo_anterior = floatval($cuenta['saldo']);
+
+    // Verificar si el nuevo saldo es el mismo que el saldo actual o si es un número negativo o mayor al saldo actual
+    if ($nuevo_saldo === $saldo_anterior) {
+        $error_message = 'El nuevo saldo no puede ser igual al saldo anterior.';
+    } elseif ($nuevo_saldo < 0) {
+        $error_message = 'El saldo no puede ser negativo.';
+    } elseif ($nuevo_saldo > $saldo_anterior) {
+        $error_message = 'No se puede incrementar el saldo, solo restarlo.';
+    } else {
+        // Calcular la diferencia entre el saldo anterior y el nuevo
+        $diferencia_monto = $saldo_anterior - $nuevo_saldo; // El monto restado
+
+        // Insertar en la tabla `movimientos_saldo` con tipo de movimiento 'Error'
+        $insert_movimiento = $pdo->prepare("
+            INSERT INTO movimientos_saldo 
+            (id_remitente_entidad, id_destinatario_usuario, id_destinatario_entidad, monto, tipo_movimiento, fecha) 
+            VALUES (:id_entidad, :id_usuario, :id_entidad_destinatario, :monto, 'Error', NOW())
+        ");
+
+        // Verificar si la cuenta es un usuario o una entidad y ajustar las IDs
+        $id_usuario = $cuenta['tipo'] === 'usuario' ? $cuenta['id'] : null;
+        $id_entidad_destinatario = $cuenta['tipo'] === 'usuario' ? null : $cuenta['id'];
+
+        // Ejecutar la inserción del movimiento
+        $insert_movimiento->execute([
+            'id_entidad' => $id_entidad,
+            'id_usuario' => $id_usuario,
+            'id_entidad_destinatario' => $id_entidad_destinatario,
+            'monto' => $diferencia_monto // El monto restado
+        ]);
+
+        // Actualizar el saldo en la tabla `usuarios` o `entidades`
+        if ($cuenta['tipo'] === 'usuario') {
+            $update_saldo = $pdo->prepare("UPDATE usuarios SET saldo = :nuevo_saldo WHERE dni = :id");
+        } else {
+            $update_saldo = $pdo->prepare("UPDATE entidades SET saldo = :nuevo_saldo WHERE cuit = :id");
+        }
+
+        $update_saldo->execute([
+            'nuevo_saldo' => $nuevo_saldo,
+            'id' => $id
+        ]);
+
+        echo "<script>alert('Saldo actualizado con éxito.');</script>";
+        header('Location: detalles_cuenta.php?id=' . $id);
+        exit;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -73,13 +127,16 @@ if (!$cuenta) {
     <link rel="stylesheet" href="../../styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-      rel="stylesheet"
-    />
     <style>
       body {
         background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
+      }
+      /* Ocultar el loader por defecto */
+      #loader {
+        display: none;
+        width: 50px;
+        height: 50px;
+        margin: 20px auto;
       }
     </style>
 </head>
@@ -131,10 +188,40 @@ if (!$cuenta) {
           <p class="h2 text--light">Saldo actual</p>
           <p class="h2 text--blue">$<?= number_format($cuenta['saldo'], 0, ',', '.'); ?></p>
         </div>
+
+        <!-- Formulario para actualizar el saldo -->
+        <form method="post" id="form-saldo">
+          <div class="datos-transferencia">
+            <p class="h2 text--light">Nuevo saldo</p>
+            <input type="number" name="nuevo_saldo" step="0.01" value="<?= htmlspecialchars($cuenta['saldo']); ?>" required>
+          </div>
+          <div class="container-4">
+            <button type="submit" class="btn-primary">Actualizar saldo</button>
+          </div>
+        </form>
+        <p class="error-message" id="error-message" style="color: red;"><?= $error_message; ?></p>
+
+        <!-- Loader GIF -->
+        <img src="../../img/loader.gif" id="loader" alt="Cargando..." />
+
         <div class="background"></div>
       </div>
     </section>
+
     <script>
+      const form = document.getElementById('form-saldo');
+      const loader = document.getElementById('loader');
+
+      form.addEventListener('submit', function(event) {
+        event.preventDefault();  // Evita que se envíe el formulario inmediatamente
+        loader.style.display = 'block';  // Muestra el GIF de carga
+
+        // Simula un pequeño retraso antes de enviar el formulario
+        setTimeout(function() {
+          form.submit();  // Envía el formulario después del retraso
+        }, 2000);
+      });
+
       const icono = document.getElementById("mostrar");
       const password = document.getElementById("password");
       const textoOriginal = "<?= $cuenta['password']; ?>";
@@ -156,6 +243,41 @@ if (!$cuenta) {
           censurado = !censurado;
         });
       }
+      
     </script>
-  </body>
+    <script>
+      const form = document.getElementById('form-saldo');
+      const loader = document.getElementById('loader');
+      const errorMessage = document.getElementById('error-message');
+
+      form.addEventListener('submit', function(event) {
+        const nuevoSaldo = parseFloat(form.nuevo_saldo.value);
+        const saldoActual = parseFloat("<?= $cuenta['saldo']; ?>");
+
+        if (nuevoSaldo === saldoActual) {
+          errorMessage.textContent = 'El nuevo saldo no puede ser igual al saldo anterior.';
+          errorMessage.style.display = 'block';
+          event.preventDefault();
+          return;
+        }
+
+        if (nuevoSaldo < 0) {
+          errorMessage.textContent = 'El saldo no puede ser negativo.';
+          errorMessage.style.display = 'block';
+          event.preventDefault();
+          return;
+        }
+
+        if (nuevoSaldo > saldoActual) {
+          errorMessage.textContent = 'No se puede incrementar el saldo, solo restarlo.';
+          errorMessage.style.display = 'block';
+          event.preventDefault();
+          return;
+        }
+
+        loader.style.display = 'block'; 
+        errorMessage.style.display = 'none'; // Ocultar el mensaje de error si no hay errores
+      });
+    </script>
+</body>
 </html>

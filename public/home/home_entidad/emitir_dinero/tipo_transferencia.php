@@ -5,45 +5,51 @@ $config = require '../../../../config/config.php';
 $db = new Database($config['db_host'], $config['db_name'], $config['db_user'], $config['db_pass']);
 $pdo = $db->getConnection();
 
-// Obtener identificador desde la URL (puede ser DNI o CUIT)
-$dni = isset($_GET['dni']) ? htmlspecialchars($_GET['dni']) : '';
-$cuit = isset($_GET['cuit']) ? htmlspecialchars($_GET['cuit']) : '';
-
-// Obtener el monto desde el GET
+// Obtener el identificador desde la URL (puede ser DNI o CUIT)
+$identificador = isset($_GET['identificador']) ? htmlspecialchars($_GET['identificador']) : '';
 $monto = isset($_GET['monto']) ? htmlspecialchars($_GET['monto']) : '';
 
-// Si no hay identificador ni monto, redirigir de nuevo
-if ((!$dni && !$cuit) || !$monto) {
+// Verificar el tipo (usuario o entidad) desde la URL
+/* $tipo = isset($_GET['tipo']) ? htmlspecialchars($_GET['tipo']) : ''; */
+
+// Si no hay identificador ni tipo, redirigir de nuevo
+if (!$identificador) {
     header('Location: buscar_usuario.php');
     exit;
 }
 
-$identificador = $dni ? $dni : $cuit;
-
-// Buscar en la tabla `usuarios` si es DNI o en `entidades` si es CUIT
+// Inicializar la variable para almacenar el nombre completo
 $nombre_completo = '';
-if ($dni) {
+$dni = '';
+$cuit = '';
+
+// Buscar en la tabla `usuarios` si es un DNI (8 dígitos) o en `entidades` si es CUIT (11 dígitos)
+if (strlen($identificador) === 8) {
     // Buscar en la tabla `usuarios` por DNI
-    $stmt = $pdo->prepare("SELECT nombre_apellido FROM usuarios WHERE dni = :identificador");
-    $stmt->execute(['identificador' => $dni]);
+    $stmt = $pdo->prepare("SELECT nombre_apellido, dni FROM usuarios WHERE dni = :identificador");
+    $stmt->execute(['identificador' => $identificador]);
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($usuario) {
         $nombre_completo = $usuario['nombre_apellido'];
+        $dni = $usuario['dni'];
     } else {
         die("No se encontró ningún usuario con ese DNI.");
     }
-} elseif ($cuit) {
+} elseif (strlen($identificador) === 11) {
     // Buscar en la tabla `entidades` por CUIT
-    $stmt = $pdo->prepare("SELECT nombre_entidad FROM entidades WHERE cuit = :identificador");
-    $stmt->execute(['identificador' => $cuit]);
+    $stmt = $pdo->prepare("SELECT nombre_entidad, cuit FROM entidades WHERE cuit = :identificador");
+    $stmt->execute(['identificador' => $identificador]);
     $entidad = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($entidad) {
         $nombre_completo = $entidad['nombre_entidad'];
+        $cuit = $entidad['cuit'];
     } else {
         die("No se encontró ninguna entidad con ese CUIT.");
     }
+} else {
+    die("Identificador o tipo inválido.");
 }
 ?>
 
@@ -89,7 +95,7 @@ if ($dni) {
         <!-- Formulario para seleccionar tipo de emisión y enviar a procesar_transferencia.php -->
         <form action="procesar_transferencia.php" method="get">
           <input type="hidden" name="identificador" value="<?= $identificador ?>">
-          <input type="hidden" name="monto" value="<?= $monto ?>"> <!-- Reenviar el monto -->
+          <input type="hidden" name="monto" value="<?= $monto ?>">
 
           <div class="container-2">
             <p class="h2 text--darkblue">Tipo de emisión</p>

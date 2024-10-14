@@ -21,7 +21,8 @@ $identificador = isset($_GET['identificador']) ? htmlspecialchars($_GET['identif
 $tipo_emision = isset($_GET['tipo_emision']) ? htmlspecialchars($_GET['tipo_emision']) : null;
 $monto = isset($_GET['monto']) ? htmlspecialchars($_GET['monto']) : 0;
 
-if (!$identificador || !$tipo_emision || $monto <= 0) {
+
+if (!$identificador) {
     die('Faltan datos para procesar la transferencia.');
 }
 

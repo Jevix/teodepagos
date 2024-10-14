@@ -42,7 +42,7 @@ if ($dniNombre && empty($error)) {
     try {
         // Consulta para buscar usuarios, excluyendo usuarios de tipo "miembro" de bancos y excluyendo la entidad en sesión
         $queryUsuarios = "
-            SELECT u.nombre_apellido, u.dni , u.saldo
+            SELECT u.nombre_apellido, u.dni, u.saldo
             FROM usuarios u 
             LEFT JOIN entidades e ON u.id_entidad = e.id_entidad 
             WHERE (u.nombre_apellido LIKE :dniNombre OR u.dni LIKE :dniNombre)
@@ -52,7 +52,7 @@ if ($dniNombre && empty($error)) {
 
         // Consulta para buscar entidades (empresas y bancos), excluyendo la entidad en sesión
         $queryEntidades = "
-            SELECT nombre_entidad, cuit, tipo_entidad , saldo
+            SELECT nombre_entidad, cuit, tipo_entidad, saldo
             FROM entidades 
             WHERE (nombre_entidad LIKE :dniNombre OR cuit LIKE :dniNombre) 
             AND id_entidad != :currentEntityId
@@ -120,44 +120,39 @@ if ($dniNombre && empty($error)) {
             <?php if ($dniNombre && (count($usuarios) > 0 || count($entidades) > 0)): ?>
                 <!-- Mostrar usuarios -->
                 <?php foreach ($usuarios as $usuario): ?>
-    <div class="transferencia corto" onclick="window.location.href='tipo_transferencia.php?dni=<?php echo htmlspecialchars($usuario['dni']); ?>&tipo=usuario'">
-        <div class="left">
-            <div>
-            <p class="h5"><?php echo htmlspecialchars($usuario['nombre_apellido']); ?></p>
-            <p class="hb">DNI: <?php echo htmlspecialchars($usuario['dni']); ?></p>
-            </div>
-        </div>
-        <div class="right">
-              <p class="h4 text--blue"><?php
-                    //necesito formatear saldo
-                    $saldo = number_format($usuario['saldo'], 0, ',', '.');
-                   echo "$".$saldo;
-              ?>
-              </p>
-        </div>
-    </div>
-<?php endforeach; ?>
+                    <div class="transferencia corto" onclick="window.location.href='tipo_transferencia.php?identificador=<?php echo htmlspecialchars($usuario['dni']); ?>'">
+                        <div class="left">
+                            <div>
+                                <p class="h5"><?php echo htmlspecialchars($usuario['nombre_apellido']); ?></p>
+                                <p class="hb">DNI: <?php echo htmlspecialchars($usuario['dni']); ?></p>
+                            </div>
+                        </div>
+                        <div class="right">
+                            <p class="h4 text--blue">
+                                <?php echo "$" . number_format($usuario['saldo'], 0, ',', '.'); ?>
+                            </p>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
 
-<?php foreach ($entidades as $entidad): ?>
-    <div class="transferencia corto" onclick="window.location.href='tipo_transferencia.php?cuit=<?php echo htmlspecialchars($entidad['cuit']); ?>&tipo=entidad'">
-    <div class="left">
-        <img src="../../../img/<?php echo ($entidad['tipo_entidad'] === 'Banco') ? 'bank' : 'empresa'; ?>.svg" alt="<?php echo htmlspecialchars($entidad['tipo_entidad']); ?>" />
-            <div>
-            <p class="h5"><?php echo htmlspecialchars($entidad['nombre_entidad']); ?></p>
-            <p class="hb">CUIT: <?php echo htmlspecialchars($entidad['cuit']); ?></p>
-            </div>
-        </div>
+                <!-- Mostrar entidades -->
+                <?php foreach ($entidades as $entidad): ?>
+                    <div class="transferencia corto" onclick="window.location.href='tipo_transferencia.php?identificador=<?php echo htmlspecialchars($entidad['cuit']); ?>'">
+                        <div class="left">
+                            <img src="../../../img/<?php echo ($entidad['tipo_entidad'] === 'Banco') ? 'bank' : 'empresa'; ?>.svg" alt="<?php echo htmlspecialchars($entidad['tipo_entidad']); ?>" />
+                            <div>
+                                <p class="h5"><?php echo htmlspecialchars($entidad['nombre_entidad']); ?></p>
+                                <p class="hb">CUIT: <?php echo htmlspecialchars($entidad['cuit']); ?></p>
+                            </div>
+                        </div>
 
-        <div class="right">
-              <p class="h4 text--blue">
-                <?php
-                    $saldoe = number_format($entidad['saldo'], 0, ',', '.');
-                   echo "$".$saldoe;
-              ?> 
-              </p>
-    </div>
-    </div>
-<?php endforeach; ?>
+                        <div class="right">
+                            <p class="h4 text--blue">
+                                <?php echo "$" . number_format($entidad['saldo'], 0, ',', '.'); ?>
+                            </p>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             <?php elseif ($dniNombre): ?>
                 <p>No se encontraron resultados.</p>
             <?php endif; ?>
