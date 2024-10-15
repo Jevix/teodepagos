@@ -8,7 +8,7 @@ session_start();
 
 // Si la sesión no está activa, redirigir al login
 if (!isset($_SESSION['id_entidad'])) {
-    header('Location: ../login');  // Redirigir a la página de login si no está autenticado
+    header('Location: ../../login');  // Redirigir a la página de login si no está autenticado
     exit;
 }
 

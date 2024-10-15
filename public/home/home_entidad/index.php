@@ -179,7 +179,7 @@
                         $img_src = '../../img/user.svg';  // Imagen por defecto para un usuario
                         
                         // Verificar si el movimiento es un Prestamo o una Recarga
-                        if ($movimiento['tipo_movimiento'] == 'Prestamo' || $movimiento['tipo_movimiento'] == 'Recarga') {
+                        if ($movimiento['tipo_movimiento'] == 'Prestamo' || $movimiento['tipo_movimiento'] == 'Recarga' || $movimiento['tipo_movimiento'] == 'Error') {
                             $img_src = '../../img/bank.svg';  // Imagen para banco en movimientos de préstamo o recarga
                         } 
                         

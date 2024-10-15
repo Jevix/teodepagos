@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['id_entidad'])) {
-    header('Location: ../../login');
+    header('Location: ../../../login');
     exit;
 }
 

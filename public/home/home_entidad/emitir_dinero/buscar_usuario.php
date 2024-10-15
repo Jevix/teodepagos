@@ -2,7 +2,7 @@
 session_start();
 if (!isset($_SESSION['id_entidad'])) {
     // Redirigir al login si no está autenticado
-    header('Location: ../../login');
+    header('Location: ../../../login');
     exit;
 }
 

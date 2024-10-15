@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['id_entidad'])) {
-    header('Location: ../../login');
+    header('Location: ../../../login');
     exit;
 }
 
@@ -23,20 +23,18 @@ try {
     // Consulta para obtener los movimientos de la entidad o usuario
     $stmtMovimientos = $pdo->prepare("
        SELECT 
-        ms.monto, 
-        COALESCE(u.nombre_apellido, e.nombre_entidad) AS destinatario_nombre, 
-        COALESCE(u.dni, e.cuit) AS destinatario_identificador, 
-        e.tipo_entidad AS destinatario_tipo_entidad,
-        ms.fecha
-    FROM movimientos_saldo ms
-    LEFT JOIN usuarios u ON ms.id_destinatario_usuario = u.id_usuario
-    LEFT JOIN entidades e ON ms.id_destinatario_entidad = e.id_entidad
-    WHERE ms.id_remitente_entidad = :id_entidad
-       OR ms.id_destinatario_entidad = :id_entidad
-       OR ms.id_remitente_usuario = :id_entidad
-       OR ms.id_destinatario_usuario = :id_entidad
-    ORDER BY ms.fecha DESC 
-    LIMIT 5
+    ms.monto, 
+    COALESCE(u.nombre_apellido, e.nombre_entidad) AS destinatario_nombre, 
+    COALESCE(u.dni, e.cuit) AS destinatario_identificador, 
+    e.tipo_entidad AS destinatario_tipo_entidad,
+    ms.fecha
+FROM movimientos_saldo ms
+LEFT JOIN usuarios u ON ms.id_destinatario_usuario = u.id_usuario
+LEFT JOIN entidades e ON ms.id_destinatario_entidad = e.id_entidad
+WHERE ms.id_remitente_entidad = :id_entidad -- Solo movimientos donde la entidad de la sesión es el remitente
+  AND ms.tipo_movimiento != 'Error' 
+ORDER BY ms.fecha DESC 
+LIMIT 5
     ");
     $stmtMovimientos->execute(['id_entidad' => $currentEntityId]);
     $movimientos = $stmtMovimientos->fetchAll(PDO::FETCH_ASSOC);

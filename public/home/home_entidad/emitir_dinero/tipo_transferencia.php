@@ -1,5 +1,15 @@
 <?php
 session_start();
+
+// Verificar si la entidad está autenticada
+if (!isset($_SESSION['id_entidad'])) {
+  header('Location: ../../../login');
+  exit;
+}
+
+
+
+
 require '../../../../src/Models/Database.php';
 $config = require '../../../../config/config.php';
 $db = new Database($config['db_host'], $config['db_name'], $config['db_user'], $config['db_pass']);

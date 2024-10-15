@@ -3,7 +3,7 @@ session_start();
 
 // Verificar si la entidad está autenticada
 if (!isset($_SESSION['id_entidad'])) {
-    header('Location: ../login.php');
+    header('Location: ../../login');
     exit;
 }
 
@@ -21,11 +21,14 @@ $search_query = isset($_GET['search']) ? $_GET['search'] : '';
 
 // Consulta para obtener los datos de entidades y usuarios con opción de búsqueda
 $query = "
-    SELECT nombre_entidad AS nombre, cuit AS identificador, saldo, tipo_entidad AS tipo FROM entidades
-    WHERE nombre_entidad LIKE :search OR cuit LIKE :search
-    UNION
-    SELECT nombre_apellido AS nombre, dni AS identificador, saldo, 'usuario' AS tipo FROM usuarios
-    WHERE nombre_apellido LIKE :search OR dni LIKE :search
+    SELECT * FROM (
+        SELECT nombre_entidad AS nombre, cuit AS identificador, saldo, tipo_entidad AS tipo FROM entidades
+        WHERE nombre_entidad LIKE :search OR cuit LIKE :search
+        UNION ALL
+        SELECT nombre_apellido AS nombre, dni AS identificador, saldo, 'usuario' AS tipo FROM usuarios
+        WHERE nombre_apellido LIKE :search OR dni LIKE :search
+    ) AS cuentas_combinadas
+    ORDER BY nombre ASC
     LIMIT :start_from, :results_per_page
 ";
 
@@ -136,10 +139,6 @@ function cargarMasCuentas() {
                 listaCuentas.appendChild(backgroundDiv);
             }
 
-            // Limpiar el contenido de las cuentas sin eliminar el fondo
-            const cuentasExistentes = listaCuentas.querySelectorAll('.componente--usuario');
-            cuentasExistentes.forEach(cuenta => cuenta.remove()); // Solo eliminar las cuentas existentes
-
             // Agregar las nuevas cuentas
             data.forEach(cuenta => {
                 const divCuenta = document.createElement('div');
@@ -213,6 +212,12 @@ function redirigir(id) {
 // Función para filtrar las cuentas y buscar en la base de datos
 function filtrarCuentas() {
     page = 1; // Reiniciar el contador de páginas
+    const listaCuentas = document.getElementById('listaCuentas');
+
+    // Limpiar la lista para nuevos resultados cuando se realiza una búsqueda
+    const cuentasExistentes = listaCuentas.querySelectorAll('.componente--usuario');
+    cuentasExistentes.forEach(cuenta => cuenta.remove());
+
     cargarMasCuentas(); // Cargar los resultados filtrados desde el servidor
 }
 

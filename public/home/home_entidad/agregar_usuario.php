@@ -3,7 +3,7 @@ session_start();
 
 // Verificar si la entidad está autenticada
 if (!isset($_SESSION['id_entidad'])) {
-    header('Location: ../login.php');
+    header('Location: ../../login');
     exit;
 }
 
