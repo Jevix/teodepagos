@@ -15,6 +15,7 @@ if (!isset($_SESSION['id_entidad'])) {
 if (isset($_SESSION['id_entidad'])) {
     // Obtener el id_entidad de la sesión
     $id_entidad = $_SESSION['id_entidad'];
+    $tipo_entidad = $_SESSION['tipo_entidad'];
 
     // Conectar a la base de datos
     require '../../../src/Models/Database.php';
@@ -90,15 +91,45 @@ if (isset($_SESSION['id_entidad'])) {
               <div class="componente--movimiento">
                 <div class="left">
                   <?php
-                    // Definir el ícono de la entidad
+                     if ($entidad['tipo_entidad'] === 'Banco') {
+
+                      $img_src = '../../img/bank.svg';
+                      //si el movimiento remitente banco a destianraio empresa mostrar logo empresa
+                      if ($movimiento['remitente_tipo_entidad'] === 'Banco' && $movimiento['destinatario_tipo_entidad'] === 'Empresa') {
+                          $img_src = '../../img/company.svg';
+                      }
+
+                      if ($movimiento['remitente_tipo_entidad'] === 'Banco' && $movimiento['destinatario_tipo_entidad'] === NULL) {
+                          $img_src = '../../img/user.svg';
+                      }
+
+                      if ($movimiento['remitente_tipo_entidad'] === 'Banco' && $movimiento['destinatario_tipo_entidad'] === 'Banco') {
+                          $img_src = '../../img/bank.svg';
+                      }
+                      
+        
+                  } elseif ($entidad['tipo_entidad'] === 'Empresa') {
+         
                     $img_src = '../../img/user.svg';
-                    if ($movimiento['tipo_movimiento'] == 'Prestamo' || $movimiento['tipo_movimiento'] == 'Recarga') {
-                        $img_src = '../../img/bank.svg';
-                    } elseif ($movimiento['destinatario_tipo_entidad'] == 'Banco' || $movimiento['remitente_tipo_entidad'] == 'Banco') {
-                        $img_src = '../../img/bank.svg';
-                    } elseif ($movimiento['destinatario_tipo_entidad'] == 'Empresa' || $movimiento['remitente_tipo_entidad'] == 'Empresa') {
-                        $img_src = '../../img/company.svg';
-                    }
+                    if ($movimiento['remitente_tipo_entidad'] === NULL && $movimiento['destinatario_tipo_entidad'] === 'Empresa') {
+                       $img_src = '../../img/user.svg';
+                   }else{
+                       $img_src = '../../img/company.svg';
+                   }
+                     if ($movimiento['tipo_movimiento'] === 'Recarga' || $movimiento['tipo_movimiento'] === 'Prestamo') {
+                         $img_src = '../../img/bank.svg';
+                     }
+                     if ($movimiento['destinatario_tipo_entidad'] == 'Banco' || $movimiento['remitente_tipo_entidad'] == 'Banco') {
+                         $img_src = '../../img/bank.svg';
+                     }//si yo empresa le tranfiero a otra empresa tiene que figurar logo empresa
+                     
+                     if ($movimiento['destinatario_tipo_entidad'] == NULL ) {
+                         $img_src = '../../img/user.svg';
+                     }
+
+                     
+                     
+                  }
                   ?>
                   <img src="<?php echo htmlspecialchars($img_src); ?>" alt="Entidad" />
                 </div>
@@ -114,10 +145,37 @@ if (isset($_SESSION['id_entidad'])) {
                         }
                       ?>
                     </p>
-                    <p class="h4 <?php echo ($movimiento['id_remitente_entidad'] == $id_entidad) ? 'text--minus' : 'text--plus'; ?>">
+                    <p class="h4 <?php 
+                    if ($movimiento['tipo_movimiento'] == 'Error') {
+                           $clase_css = 'text--minus'; // Aplicar 'text--minus' si es un Error
+                           echo $clase_css;
+                        }else{
+                       
+                        if ($tipo_entidad === 'Banco') {
+                            $clase_css = 'text--plus'; // Aplicar 'text--minus' si es un Error
+                            echo $clase_css;
+                          }else{
+                           echo ($movimiento['id_remitente_entidad'] == $id_entidad) ? 'text--minus' : 'text--plus';    
+                          }
+                             
+                        }?>">
                       <?php
-                        // Mostrar monto con formato
-                        $signo = ($movimiento['id_remitente_entidad'] == $id_entidad) ? '-' : '+';
+                        if ($movimiento['tipo_movimiento'] == 'Prestamo') {
+                          $descripcion_movimiento = "Préstamo";
+                          $signo = "+";
+                      } elseif ($movimiento['tipo_movimiento'] == 'Recarga') {
+                          $descripcion_movimiento = "Recarga de saldo";
+                          $signo = "+";
+                      } elseif ($movimiento['tipo_movimiento'] == 'Error') {
+                          $descripcion_movimiento = "Error Bancario";
+                          $signo = "-";
+                      } elseif ($movimiento['id_remitente_entidad'] == $id_entidad) {
+                          $descripcion_movimiento = "Transferencia enviada";
+                          $signo = "-";
+                      } else {
+                          $descripcion_movimiento = "Transferencia recibida";
+                          $signo = "+";
+                      }     
                         echo $signo . "$" . number_format(abs($movimiento['monto']), 0, ',', '.');
                       ?>
                     </p>
@@ -126,17 +184,8 @@ if (isset($_SESSION['id_entidad'])) {
                     <p class="hb">
                       <?php
                         // Mostrar el tipo de movimiento
-                        $tipo_movimiento = '';
-                        if ($movimiento['tipo_movimiento'] == 'Prestamo') {
-                            $tipo_movimiento = "Préstamo";
-                        } elseif ($movimiento['tipo_movimiento'] == 'Recarga') {
-                            $tipo_movimiento = "Recarga de saldo";
-                        } elseif ($movimiento['id_remitente_entidad'] == $id_entidad) {
-                            $tipo_movimiento = "Transferencia enviada";
-                        } else {
-                            $tipo_movimiento = "Transferencia recibida";
-                        }
-                        echo htmlspecialchars($tipo_movimiento);
+                       
+                        echo htmlspecialchars($descripcion_movimiento);
                       ?>
                     </p>
                     <p class="hb">

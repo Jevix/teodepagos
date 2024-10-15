@@ -173,12 +173,49 @@ if (!isset($_SESSION['id_entidad'])) {
                   <div class="left">
                   <?php
                                 // Lógica de imagen para Banco
-                                $img_src = '../../img/user.svg';  // Imagen por defecto para bancos
-                                if ($movimiento['remitente_tipo_entidad'] === 'Empresa' || $movimiento['destinatario_tipo_entidad'] === 'Empresa') {
-                                    $img_src = '../../img/company.svg';  // Imagen para empresas si está involucrada
-                                }
-                                ?>
-                     <img src="<?php echo htmlspecialchars($img_src); ?>" alt="Entidad" />
+                                           // primero saber si la entidad de la session es banco o empresa  $_SESSION['tipo_entidad'] = $entidad['tipo_entidad'];
+
+                                           if ($entidad['tipo_entidad'] === 'Banco') {
+
+                                               $img_src = '../../img/bank.svg';
+                                               //si el movimiento remitente banco a destianraio empresa mostrar logo empresa
+                                               if ($movimiento['remitente_tipo_entidad'] === 'Banco' && $movimiento['destinatario_tipo_entidad'] === 'Empresa') {
+                                                   $img_src = '../../img/company.svg';
+                                               }
+
+                                               if ($movimiento['remitente_tipo_entidad'] === 'Banco' && $movimiento['destinatario_tipo_entidad'] === NULL) {
+                                                   $img_src = '../../img/user.svg';
+                                               }
+
+                                               if ($movimiento['remitente_tipo_entidad'] === 'Banco' && $movimiento['destinatario_tipo_entidad'] === 'Banco') {
+                                                   $img_src = '../../img/bank.svg';
+                                               }
+                                               
+                                 
+                                           } elseif ($entidad['tipo_entidad'] === 'Empresa') {
+                                  
+                                             $img_src = '../../img/user.svg';
+                                             if ($movimiento['remitente_tipo_entidad'] === NULL && $movimiento['destinatario_tipo_entidad'] === 'Empresa') {
+                                                $img_src = '../../img/user.svg';
+                                            }else{
+                                                $img_src = '../../img/company.svg';
+                                            }
+                                              if ($movimiento['tipo_movimiento'] === 'Recarga' || $movimiento['tipo_movimiento'] === 'Prestamo') {
+                                                  $img_src = '../../img/bank.svg';
+                                              }
+                                              if ($movimiento['destinatario_tipo_entidad'] == 'Banco' || $movimiento['remitente_tipo_entidad'] == 'Banco') {
+                                                  $img_src = '../../img/bank.svg';
+                                              }//si yo empresa le tranfiero a otra empresa tiene que figurar logo empresa
+                                              
+                                              if ($movimiento['destinatario_tipo_entidad'] == NULL ) {
+                                                  $img_src = '../../img/user.svg';
+                                              }
+             
+                                              
+                                              
+                                           }
+                ?>    
+                <img src="<?php echo $img_src; ?>" alt="">         
                   </div>
                   <div class="right">
                      <div class="arriba">
