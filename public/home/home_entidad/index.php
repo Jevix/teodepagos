@@ -1,54 +1,51 @@
 <?php
-   session_start();
-   if (!isset($_SESSION['id_entidad'])) {
-       header('Location: ../index.php');  // Redirigir a la página de login si no está autenticado
-       exit;
-   }
-   if (isset($_SESSION['tipo_entidad'])) {
-       $id_entidad = $_SESSION['id_entidad'];
-       $tipo_entidad = $_SESSION['tipo_entidad'];
-       $id_usuario = $_SESSION['id_usuario'];
-   
-       require '../../../src/Models/Database.php';
-       $config = require '../../../config/config.php';
-       $db = new Database($config['db_host'], $config['db_name'], $config['db_user'], $config['db_pass']);
-       $pdo = $db->getConnection();
-   
-       $stmt = $pdo->prepare("SELECT * FROM entidades WHERE id_entidad = :id_entidad");
-       $stmt->execute(['id_entidad' => $id_entidad]);
-       $entidad = $stmt->fetch(PDO::FETCH_ASSOC);
-   
-       if ($entidad) {
-           $_SESSION['nombre_entidad'] = $entidad['nombre_entidad'];
-           $_SESSION['tipo_entidad'] = $entidad['tipo_entidad'];
-           $_SESSION['cuit'] = $entidad['cuit'];
-   
-           // Obtener los movimientos de saldo
-           $stmt = $pdo->prepare("
-     SELECT ms.*, 
-               COALESCE(remitente_entidad.nombre_entidad, remitente.nombre_apellido) AS remitente_nombre,
-               COALESCE(destinatario_entidad.nombre_entidad, destinatario.nombre_apellido) AS destinatario_nombre,
-               remitente_entidad.tipo_entidad AS remitente_tipo_entidad,
-               destinatario_entidad.tipo_entidad AS destinatario_tipo_entidad
-        FROM movimientos_saldo ms
-        LEFT JOIN entidades AS remitente_entidad ON ms.id_remitente_entidad = remitente_entidad.id_entidad
-        LEFT JOIN usuarios AS remitente ON ms.id_remitente_usuario = remitente.id_usuario
-        LEFT JOIN entidades AS destinatario_entidad ON ms.id_destinatario_entidad = destinatario_entidad.id_entidad
-        LEFT JOIN usuarios AS destinatario ON ms.id_destinatario_usuario = destinatario.id_usuario
-        WHERE ms.id_remitente_entidad = :id_entidad OR ms.id_destinatario_entidad = :id_entidad
-        ORDER BY ms.fecha DESC
-   LIMIT 3;
-   ");
-   $stmt->execute(['id_entidad' => $id_entidad]);
-   $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-       } else {
-           echo "<script>console.log('Entidad no encontrada');</script>";
-       }
-   } else {
-       header('Location: ../login.php');
-       exit;
-   }
-   ?>
+session_start();
+if (!isset($_SESSION['id_entidad'])) {
+    header('Location: ../index.php');  // Redirigir a la página de login si no está autenticado
+    exit;
+}
+
+    $id_entidad = $_SESSION['id_entidad'];
+    $tipo_entidad = $_SESSION['tipo_entidad'];
+    $id_usuario = $_SESSION['id_usuario'];
+
+    require '../../../src/Models/Database.php';
+    $config = require '../../../config/config.php';
+    $db = new Database($config['db_host'], $config['db_name'], $config['db_user'], $config['db_pass']);
+    $pdo = $db->getConnection();
+
+    $stmt = $pdo->prepare("SELECT * FROM entidades WHERE id_entidad = :id_entidad");
+    $stmt->execute(['id_entidad' => $id_entidad]);
+    $entidad = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($entidad) {
+        $_SESSION['nombre_entidad'] = $entidad['nombre_entidad'];
+        $_SESSION['tipo_entidad'] = $entidad['tipo_entidad'];
+        $_SESSION['cuit'] = $entidad['cuit'];
+
+        // Obtener los movimientos de saldo
+        $stmt = $pdo->prepare("
+            SELECT ms.*, 
+                   COALESCE(remitente_entidad.nombre_entidad, remitente.nombre_apellido) AS remitente_nombre,
+                   COALESCE(destinatario_entidad.nombre_entidad, destinatario.nombre_apellido) AS destinatario_nombre,
+                   remitente_entidad.tipo_entidad AS remitente_tipo_entidad,
+                   destinatario_entidad.tipo_entidad AS destinatario_tipo_entidad
+            FROM movimientos_saldo ms
+            LEFT JOIN entidades AS remitente_entidad ON ms.id_remitente_entidad = remitente_entidad.id_entidad
+            LEFT JOIN usuarios AS remitente ON ms.id_remitente_usuario = remitente.id_usuario
+            LEFT JOIN entidades AS destinatario_entidad ON ms.id_destinatario_entidad = destinatario_entidad.id_entidad
+            LEFT JOIN usuarios AS destinatario ON ms.id_destinatario_usuario = destinatario.id_usuario
+            WHERE ms.id_remitente_entidad = :id_entidad OR ms.id_destinatario_entidad = :id_entidad
+            ORDER BY ms.fecha DESC
+            LIMIT 3;
+        ");
+        $stmt->execute(['id_entidad' => $id_entidad]);
+        $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        echo "<script>console.log('Entidad no encontrada');</script>";
+    }
+
+?>
 <!DOCTYPE html>
 <html lang="en">
    <head>
@@ -174,28 +171,13 @@
                <?php foreach ($movimientos as $movimiento): ?>
                <div class="componente--movimiento">
                   <div class="left">
-                     <?php
-                        $img_src = '../../img/user.svg';  // Imagen por defecto para un usuario
-                        
-                        // Verificar si el movimiento es un Prestamo o una Recarga
-                        if ($movimiento['tipo_movimiento'] == 'Prestamo' || $movimiento['tipo_movimiento'] == 'Recarga' || $movimiento['tipo_movimiento'] == 'Error') {
-                            $img_src = '../../img/bank.svg';  // Imagen para banco en movimientos de préstamo o recarga
-                        } 
-                        
-                        // Verificar si el remitente o destinatario es un banco o una empresa
-                        elseif ($movimiento['remitente_tipo_entidad'] == 'Banco' && $movimiento['destinatario_tipo_entidad'] == 'Banco') {
-                            $img_src = '../../img/bank.svg';  // Imagen para bancos
-                        } elseif ($movimiento['remitente_tipo_entidad'] == 'Empresa' && $movimiento['destinatario_tipo_entidad'] == 'Empresa') {
-                            $img_src = '../../img/company.svg';  // Imagen para empresas
-                        }
-                        
-                        if ($movimiento['remitente_tipo_entidad'] == 'Empresa' && $movimiento['destinatario_tipo_entidad'] == 'Banco') {
-                            $img_src = '../../img/bank.svg';  // Imagen para bancos
-                        }
-                        
-                        
-                        
-                        ?>
+                  <?php
+                                // Lógica de imagen para Banco
+                                $img_src = '../../img/user.svg';  // Imagen por defecto para bancos
+                                if ($movimiento['remitente_tipo_entidad'] === 'Empresa' || $movimiento['destinatario_tipo_entidad'] === 'Empresa') {
+                                    $img_src = '../../img/company.svg';  // Imagen para empresas si está involucrada
+                                }
+                                ?>
                      <img src="<?php echo htmlspecialchars($img_src); ?>" alt="Entidad" />
                   </div>
                   <div class="right">
@@ -234,7 +216,13 @@
                            $clase_css = 'text--minus'; // Aplicar 'text--minus' si es un Error
                            echo $clase_css;
                         }else{
-                          echo ($movimiento['id_remitente_entidad'] == $id_entidad) ? 'text--minus' : 'text--plus';    }?>">
+                          if ($tipo_entidad === 'Banco') {
+                            $clase_css = 'text--plus'; // Aplicar 'text--minus' si es un Error
+                            echo $clase_css;
+                          }else{
+                           echo ($movimiento['id_remitente_entidad'] == $id_entidad) ? 'text--minus' : 'text--plus';    
+                          }
+                          }?>">
                        
 
 

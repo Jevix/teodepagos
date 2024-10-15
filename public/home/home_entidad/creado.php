@@ -12,18 +12,24 @@ require '../../../src/Models/Database.php';
 $config = require '../../../config/config.php';
 $db = new Database($config['db_host'], $config['db_name'], $config['db_user'], $config['db_pass']);
 $pdo = $db->getConnection();
+$id_entidad = $_SESSION['id_entidad'];
 
-// Verificar si la entidad es de tipo 'Banco'
-$stmt = $pdo->prepare("SELECT tipo_entidad FROM entidades WHERE id_entidad = :id_entidad");
-$stmt->execute(['id_entidad' => $_SESSION['id_entidad']]);
+// Verificar el tipo de entidad y el tipo de usuario (miembro o no)
+$query = "
+    SELECT e.tipo_entidad, u.tipo_usuario 
+    FROM entidades e
+    LEFT JOIN usuarios u ON u.id_entidad = e.id_entidad
+    WHERE e.id_entidad = :id_entidad";
+$stmt = $pdo->prepare($query);
+$stmt->bindParam(':id_entidad', $id_entidad, PDO::PARAM_INT);
+$stmt->execute();
 $entidad = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($entidad['tipo_entidad'] !== 'Banco') {
-    // Si no es un banco, redirigir a una página de error o inicio
-    header('Location: ../index.php');
+// Si no es un banco o el tipo de usuario no es miembro, redirigir a index.php
+if ($entidad['tipo_entidad'] !== 'Banco' || $entidad['tipo_usuario'] !== 'Miembro') {
+    header('Location: index.php');
     exit;
 }
-
 // Obtener los datos del POST (enviados desde agregar_usuario.php)
 $tipo_cuenta = $_POST['tipo_cuenta'] ?? 'Usuario';
 $nombre = $_POST['nombre'] ?? 'N/A';

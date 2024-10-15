@@ -31,7 +31,7 @@ if ($tipo_entidad === false) {
 
 // Si el tipo de entidad no es "banco", redirigir al index.php
 if ($tipo_entidad['tipo_entidad'] !== 'Banco') {
-    header('Location: ../index.php');
+    header('Location: index.php');
     exit;
 }
 
