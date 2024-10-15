@@ -1,0 +1,3 @@
+# Bloquear acceso a los archivos de código en src
+Order Allow,Deny
+Deny from all

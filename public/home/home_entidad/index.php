@@ -26,18 +26,17 @@
            // Obtener los movimientos de saldo
            $stmt = $pdo->prepare("
      SELECT ms.*, 
-        COALESCE(remitente_entidad.nombre_entidad, remitente_usuario.nombre_apellido) AS remitente_nombre,
-        destinatario_entidad.nombre_entidad AS destinatario_nombre_entidad,
-        destinatario_usuario.nombre_apellido AS destinatario_nombre_usuario,
-        remitente_entidad.tipo_entidad AS remitente_tipo_entidad,
-        destinatario_entidad.tipo_entidad AS destinatario_tipo_entidad
-   FROM movimientos_saldo ms
-   LEFT JOIN entidades AS remitente_entidad ON ms.id_remitente_entidad = remitente_entidad.id_entidad
-   LEFT JOIN usuarios AS remitente_usuario ON ms.id_remitente_usuario = remitente_usuario.id_usuario
-   LEFT JOIN entidades AS destinatario_entidad ON ms.id_destinatario_entidad = destinatario_entidad.id_entidad
-   LEFT JOIN usuarios AS destinatario_usuario ON ms.id_destinatario_usuario = destinatario_usuario.id_usuario
-   WHERE ms.id_remitente_entidad = :id_entidad OR ms.id_destinatario_entidad = :id_entidad
-   ORDER BY ms.fecha DESC
+               COALESCE(remitente_entidad.nombre_entidad, remitente.nombre_apellido) AS remitente_nombre,
+               COALESCE(destinatario_entidad.nombre_entidad, destinatario.nombre_apellido) AS destinatario_nombre,
+               remitente_entidad.tipo_entidad AS remitente_tipo_entidad,
+               destinatario_entidad.tipo_entidad AS destinatario_tipo_entidad
+        FROM movimientos_saldo ms
+        LEFT JOIN entidades AS remitente_entidad ON ms.id_remitente_entidad = remitente_entidad.id_entidad
+        LEFT JOIN usuarios AS remitente ON ms.id_remitente_usuario = remitente.id_usuario
+        LEFT JOIN entidades AS destinatario_entidad ON ms.id_destinatario_entidad = destinatario_entidad.id_entidad
+        LEFT JOIN usuarios AS destinatario ON ms.id_destinatario_usuario = destinatario.id_usuario
+        WHERE ms.id_remitente_entidad = :id_entidad OR ms.id_destinatario_entidad = :id_entidad
+        ORDER BY ms.fecha DESC
    LIMIT 3;
    ");
    $stmt->execute(['id_entidad' => $id_entidad]);
@@ -203,34 +202,11 @@
                      <div class="arriba">
                         <p class="h5" id="h4">
                            <?php
-                              $id_columna_remitente_usuario = $movimiento['id_remitente_usuario'];
-                              $id_columna_remitente_entidad = $movimiento['id_remitente_entidad'];
-                              $id_columna_destinatario_usuario = $movimiento['id_destinatario_usuario'];
-                              $id_columna_destinatario_entidad = $movimiento['id_destinatario_entidad'];
-                              
-                              // Detectar siempre el nombre correcto basado en la sesión activa
-                              if ($id_columna_destinatario_entidad == $id_entidad || $id_columna_destinatario_usuario == $id_usuario) {
-                                  // Si la sesión activa es el destinatario, mostrar el nombre del remitente
-                                  if ($id_columna_remitente_entidad == NULL) {
-                                      // Si el remitente es un usuario, mostrar el nombre del usuario remitente
-                                      $nombre_destinatario = $movimiento['remitente_nombre'];
-                                  } else {
-                                      // Si el remitente es una entidad, mostrar el nombre de la entidad remitente
-                                      $nombre_destinatario = $movimiento['remitente_nombre'];
-                                  }
-                              } else {
-                                  // Si la sesión activa es el remitente, mostrar el nombre del destinatario
-                                  if ($id_columna_destinatario_entidad == NULL) {
-                                      // Si el destinatario es un usuario, mostrar el nombre del destinatario usuario
-                                      $nombre_destinatario = $movimiento['destinatario_nombre_usuario'];
-                                  } else {
-                                      // Si el destinatario es una entidad, mostrar el nombre del destinatario entidad
-                                      $nombre_destinatario = $movimiento['destinatario_nombre_entidad'];
-                                  }
-                              }
-                              
-                              // Mostrar el nombre final
-                              echo htmlspecialchars($nombre_destinatario);
+                          if ($movimiento['id_remitente_entidad'] == $id_entidad) {
+                           echo htmlspecialchars($movimiento['destinatario_nombre']);
+                       } else {
+                           echo htmlspecialchars($movimiento['remitente_nombre']);
+                       }
                                 
                               ?>
                         </p>

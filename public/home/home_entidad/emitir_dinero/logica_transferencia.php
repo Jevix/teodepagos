@@ -6,18 +6,52 @@ if (!isset($_SESSION['id_entidad'])) {
     header('Location: ../../../login');
     exit;
 }
-
-// Verificar si la solicitud es por método POST
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ../../error');
-    exit;
-}
-
-// Incluir la configuración y la clase Database
 require '../../../../src/Models/Database.php';
 $config = require '../../../../config/config.php';
 $db = new Database($config['db_host'], $config['db_name'], $config['db_user'], $config['db_pass']);
 $pdo = $db->getConnection();
+
+$id_entidad = $_SESSION['id_entidad'];
+
+// Verificar el tipo de entidad y el tipo de usuario (miembro o no)
+$query = "
+    SELECT e.tipo_entidad, u.tipo_usuario 
+    FROM entidades e
+    LEFT JOIN usuarios u ON u.id_entidad = e.id_entidad
+    WHERE e.id_entidad = :id_entidad";
+$stmt = $pdo->prepare($query);
+$stmt->bindParam(':id_entidad', $id_entidad, PDO::PARAM_INT);
+$stmt->execute();
+$entidad = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Verificar si se obtuvo correctamente el tipo_entidad y el tipo_usuario
+if ($entidad === false) {
+    echo "Error: No se encontró el tipo de entidad para la entidad ID: " . $id_entidad;
+    exit;
+}
+
+// Si no es un banco o el tipo de usuario no es miembro, redirigir a index.php
+if ($entidad['tipo_entidad'] !== 'Banco' || $entidad['tipo_usuario'] !== 'Miembro') {
+    header('Location: ../index.php');
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    // Enviar el código de estado 405 (Method Not Allowed)
+    header('HTTP/1.1 405 Method Not Allowed');
+    
+    // También puedes especificar los métodos permitidos en el encabezado Allow
+    header('Allow: POST');
+
+    // Opcional: Mostrar un mensaje o redirigir a una página de error
+    echo 'Error 405: Método no permitido. Solo se permite POST.';
+    
+    // Detener la ejecución del script
+    exit;
+}
+// Incluir la configuración y la clase Database
+
+
 
 // Verificar si se recibió el identificador (DNI o CUIT) y el tipo de emisión
 if (!isset($_POST['identificador'], $_POST['tipo_emision'])) {

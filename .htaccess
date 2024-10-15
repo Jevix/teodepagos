@@ -1,0 +1,6 @@
+# Habilitar el motor de reescritura
+RewriteEngine On
+
+# Redirigir si no está especificado ningún archivo o carpeta (a public/)
+RewriteCond %{REQUEST_URI} ^/teodepagos/?$ 
+RewriteRule ^(.*)$ /teodepagos/public/ [L,R=301]

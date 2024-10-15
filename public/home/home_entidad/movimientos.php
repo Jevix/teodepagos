@@ -90,15 +90,25 @@ if (isset($_SESSION['id_entidad'])) {
               <div class="componente--movimiento">
                 <div class="left">
                   <?php
-                    // Definir el ícono de la entidad
-                    $img_src = '../../img/user.svg';
-                    if ($movimiento['tipo_movimiento'] == 'Prestamo' || $movimiento['tipo_movimiento'] == 'Recarga') {
-                        $img_src = '../../img/bank.svg';
-                    } elseif ($movimiento['destinatario_tipo_entidad'] == 'Banco' || $movimiento['remitente_tipo_entidad'] == 'Banco') {
-                        $img_src = '../../img/bank.svg';
-                    } elseif ($movimiento['destinatario_tipo_entidad'] == 'Empresa' || $movimiento['remitente_tipo_entidad'] == 'Empresa') {
-                        $img_src = '../../img/company.svg';
+                    $img_src = '../../img/user.svg';  // Imagen por defecto para un usuario
+                        
+                    // Verificar si el movimiento es un Prestamo o una Recarga
+                    if ($movimiento['tipo_movimiento'] == 'Prestamo' || $movimiento['tipo_movimiento'] == 'Recarga' || $movimiento['tipo_movimiento'] == 'Error') {
+                        $img_src = '../../img/bank.svg';  // Imagen para banco en movimientos de préstamo o recarga
+                    } 
+                    
+                    // Verificar si el remitente o destinatario es un banco o una empresa
+                    elseif ($movimiento['remitente_tipo_entidad'] == 'Banco' && $movimiento['destinatario_tipo_entidad'] == 'Banco') {
+                        $img_src = '../../img/bank.svg';  // Imagen para bancos
+                    } elseif ($movimiento['remitente_tipo_entidad'] == 'Empresa' && $movimiento['destinatario_tipo_entidad'] == 'Empresa') {
+                        $img_src = '../../img/company.svg';  // Imagen para empresas
                     }
+                    
+                    if ($movimiento['remitente_tipo_entidad'] == 'Empresa' && $movimiento['destinatario_tipo_entidad'] == 'Banco') {
+                        $img_src = '../../img/bank.svg';  // Imagen para bancos
+                    }
+                    
+                    
                   ?>
                   <img src="<?php echo htmlspecialchars($img_src); ?>" alt="Entidad" />
                 </div>

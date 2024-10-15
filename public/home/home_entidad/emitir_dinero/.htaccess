@@ -1,0 +1,5 @@
+# Desactivar la visualización de directorios
+Options -Indexes
+
+# Redirigir a buscar_usuario.php si se intenta acceder a un directorio sin un archivo índice
+DirectoryIndex buscar_usuario.php
