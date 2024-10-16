@@ -74,7 +74,7 @@
                     id_remitente_usuario INT DEFAULT NULL,
                     id_remitente_entidad INT DEFAULT NULL,
                     monto DECIMAL(10,0) NOT NULL CHECK (monto >= 1),
-                    tipo_movimiento ENUM('Ingreso', 'Egreso', 'Prestamo','Recarga') NOT NULL,
+                    tipo_movimiento ENUM('Ingreso', 'Egreso', 'Prestamo','Recarga','Error') NOT NULL,
                     id_destinatario_usuario INT DEFAULT NULL,
                     id_destinatario_entidad INT DEFAULT NULL,
                     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

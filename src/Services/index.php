@@ -57,7 +57,7 @@
 <body>
     <div class="container">
         <h2>Ejecutar Comandos SQL</h2>
-        <form action="procesar_sql.php" method="post">
+        <form id="sqlForm">
             <div class="form-group">
                 <label for="password">Contraseña de seguridad:</label>
                 <input type="password" id="password" name="password" required>
@@ -67,7 +67,63 @@
             </div>
         </form>
 
+        <!-- Botones para cargar entidades y usuarios -->
+        <form id="cargarEntidadesForm">
+            <button type="button" id="cargarEntidadesBtn">Cargar Entidades</button>
+        </form>
         
+        <form id="cargarUsuariosForm" method="get" action="api_carga_usuario.php">
+    <input type="hidden" name="accion" value="cargar_usuarios">
+    <button type="submit" id="cargarUsuariosBtn">Cargar Usuarios</button>
+</form>
+
+        <div id="resultado"></div>
     </div>
+
+    <script>
+        // Función para enviar datos en formato JSON usando fetch API
+        function enviarDatosJSON(url, data) {
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.text())
+            .then(result => {
+                document.getElementById('resultado').innerHTML = result;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Manejador del formulario de SQL
+        document.getElementById('sqlForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const password = document.getElementById('password').value;
+            const data = { password: password };
+            enviarDatosJSON('procesar_sql.php', data);
+        });
+
+        // Manejador para cargar entidades
+        document.getElementById('cargarEntidadesBtn').addEventListener('click', function() {
+            fetch('api_carga_entidades.php')
+                .then(response => response.text())
+                .then(result => {
+                    document.getElementById('resultado').innerHTML = result;
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+        // Manejador para cargar usuarios
+        document.getElementById('cargarUsuariosBtn').addEventListener('click', function() {
+            fetch('api_carga_usuario.php')
+                .then(response => response.text())
+                .then(result => {
+                    document.getElementById('resultado').innerHTML = result;
+                })
+                .catch(error => console.error('Error:', error));
+        });
+    </script>
 </body>
 </html>

@@ -103,8 +103,10 @@ if (isset($_POST['nuevo_saldo'])) {
         // Actualizar el saldo en la tabla `usuarios` o `entidades`
         if ($cuenta['tipo'] === 'usuario') {
             $update_saldo = $pdo->prepare("UPDATE usuarios SET saldo = :nuevo_saldo WHERE dni = :id");
+            $error_message = 'Se ha actualizado el saldo con exito.';
         } else {
             $update_saldo = $pdo->prepare("UPDATE entidades SET saldo = :nuevo_saldo WHERE cuit = :id");
+            $error_message = 'Se ha actualizado el saldo con exito.';
         }
 
         $update_saldo->execute([

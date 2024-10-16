@@ -44,3 +44,5 @@ if __name__ == '__main__':
         enviar_entidades_api(entidades)
     else:
         print("No se encontraron entidades para enviar.")
+
+        
