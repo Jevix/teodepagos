@@ -66,58 +66,56 @@ if (!$cuenta) {
 // Obtener el nuevo saldo del formulario si se ha enviado
 $error_message = '';
 
+// Insertar el movimiento y actualizar el saldo
 if (isset($_POST['nuevo_saldo'])) {
-    $nuevo_saldo = floatval($_POST['nuevo_saldo']);
-    $saldo_anterior = floatval($cuenta['saldo']);
+  $nuevo_saldo = floatval($_POST['nuevo_saldo']);
+  $saldo_anterior = floatval($cuenta['saldo']);
 
-    // Verificar si el nuevo saldo es el mismo que el saldo actual o si es un número negativo o mayor al saldo actual
-    if ($nuevo_saldo === $saldo_anterior) {
-        $error_message = 'El nuevo saldo no puede ser igual al saldo anterior.';
-    } elseif ($nuevo_saldo < 0) {
-        $error_message = 'El saldo no puede ser negativo.';
-    } elseif ($nuevo_saldo > $saldo_anterior) {
-        $error_message = 'No se puede incrementar el saldo, solo restarlo.';
-    } else {
-        // Calcular la diferencia entre el saldo anterior y el nuevo
-        $diferencia_monto = $saldo_anterior - $nuevo_saldo; // El monto restado
+  // Verificar si el nuevo saldo es el mismo que el saldo actual o si es un número negativo o mayor al saldo actual
+  if ($nuevo_saldo === $saldo_anterior) {
+      $error_message = 'El nuevo saldo no puede ser igual al saldo anterior.';
+  } elseif ($nuevo_saldo < 0) {
+      $error_message = 'El saldo no puede ser negativo.';
+  } elseif ($nuevo_saldo > $saldo_anterior) {
+      $error_message = 'No se puede incrementar el saldo, solo restarlo.';
+  } else {
+      // Calcular la diferencia entre el saldo anterior y el nuevo
+      $diferencia_monto = $saldo_anterior - $nuevo_saldo;
 
-        // Insertar en la tabla `movimientos_saldo` con tipo de movimiento 'Error'
-        $insert_movimiento = $pdo->prepare("
-            INSERT INTO movimientos_saldo 
-            (id_remitente_entidad, id_destinatario_usuario, id_destinatario_entidad, monto, tipo_movimiento, fecha) 
-            VALUES (:id_entidad, :id_usuario, :id_entidad_destinatario, :monto, 'Error', NOW())
-        ");
+      // Insertar en la tabla `movimientos_saldo`
+      $insert_movimiento = $pdo->prepare("
+          INSERT INTO movimientos_saldo 
+          (id_remitente_entidad, id_destinatario_usuario, id_destinatario_entidad, monto, tipo_movimiento, fecha) 
+          VALUES (:id_entidad, :id_usuario, :id_entidad_destinatario, :monto, 'Error', NOW())
+      ");
 
-        // Verificar si la cuenta es un usuario o una entidad y ajustar las IDs
-        $id_usuario = $cuenta['tipo'] === 'usuario' ? $cuenta['id'] : null;
-        $id_entidad_destinatario = $cuenta['tipo'] === 'usuario' ? null : $cuenta['id'];
+      // Verificar si la cuenta es un usuario o una entidad y ajustar las IDs
+      $id_usuario = $cuenta['tipo'] === 'usuario' ? $cuenta['id'] : null;
+      $id_entidad_destinatario = $cuenta['tipo'] === 'usuario' ? null : $cuenta['id'];
 
-        // Ejecutar la inserción del movimiento
-        $insert_movimiento->execute([
-            'id_entidad' => $id_entidad,
-            'id_usuario' => $id_usuario,
-            'id_entidad_destinatario' => $id_entidad_destinatario,
-            'monto' => $diferencia_monto // El monto restado
-        ]);
+      // Ejecutar la inserción del movimiento
+      $insert_movimiento->execute([
+          'id_entidad' => $id_entidad,
+          'id_usuario' => $id_usuario,
+          'id_entidad_destinatario' => $id_entidad_destinatario,
+          'monto' => $diferencia_monto
+      ]);
 
-        // Actualizar el saldo en la tabla `usuarios` o `entidades`
-        if ($cuenta['tipo'] === 'usuario') {
-            $update_saldo = $pdo->prepare("UPDATE usuarios SET saldo = :nuevo_saldo WHERE dni = :id");
-            $error_message = 'Se ha actualizado el saldo con exito.';
-        } else {
-            $update_saldo = $pdo->prepare("UPDATE entidades SET saldo = :nuevo_saldo WHERE cuit = :id");
-            $error_message = 'Se ha actualizado el saldo con exito.';
-        }
+      // Actualizar el saldo en la tabla `usuarios` o `entidades`
+      if ($cuenta['tipo'] === 'usuario') {
+          $update_saldo = $pdo->prepare("UPDATE usuarios SET saldo = :nuevo_saldo WHERE dni = :id");
+      } else {
+          $update_saldo = $pdo->prepare("UPDATE entidades SET saldo = :nuevo_saldo WHERE cuit = :id");
+      }
 
-        $update_saldo->execute([
-            'nuevo_saldo' => $nuevo_saldo,
-            'id' => $id
-        ]);
+      $update_saldo->execute([
+          'nuevo_saldo' => $nuevo_saldo,
+          'id' => $id
+      ]);
 
-        echo "<script>alert('Saldo actualizado con éxito.');</script>";
-        header('Location: detalles_cuenta.php?id=' . $id);
-        exit;
-    }
+      // Definir la variable de éxito
+      $success_message = 'El saldo se ha actualizado con éxito.';
+  }
 }
 ?>
 <!DOCTYPE html>
@@ -202,6 +200,10 @@ if (isset($_POST['nuevo_saldo'])) {
           </div>
         </form>
         <p class="error-message" id="error-message" style="color: red;"><?= $error_message; ?></p>
+        <p class="success-message" id="success-message" style="color: green;">
+    <?= isset($success_message) ? $success_message : ''; ?>
+</p>
+
 
         <!-- Loader GIF -->
         <img src="../../img/loader.gif" id="loader" alt="Cargando..." />
@@ -213,6 +215,8 @@ if (isset($_POST['nuevo_saldo'])) {
     <script>
       const form = document.getElementById('form-saldo');
       const loader = document.getElementById('loader');
+      const errorMessage = document.getElementById('error-message');
+
 
       form.addEventListener('submit', function(event) {
         event.preventDefault();  // Evita que se envíe el formulario inmediatamente
@@ -248,10 +252,7 @@ if (isset($_POST['nuevo_saldo'])) {
       
     </script>
     <script>
-      const form = document.getElementById('form-saldo');
-      const loader = document.getElementById('loader');
-      const errorMessage = document.getElementById('error-message');
-
+     
       form.addEventListener('submit', function(event) {
         const nuevoSaldo = parseFloat(form.nuevo_saldo.value);
         const saldoActual = parseFloat("<?= $cuenta['saldo']; ?>");

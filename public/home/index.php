@@ -273,6 +273,7 @@
                         <?php
                         $descripcion_movimiento = '';
                         $signo = '';
+                        echo ("<script> console.log('Movimiento: " . $movimiento['tipo_movimiento'] . "');</script>");
 
                         if ($movimiento['tipo_movimiento'] == 'Prestamo') {
                            $descripcion_movimiento = "Préstamo";

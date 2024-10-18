@@ -84,9 +84,6 @@ $nombre_entidad = isset($_POST['nombre_entidad']) ? htmlspecialchars($_POST['nom
   <body>
     <section class="main">
       <nav class="navbar">
-        <a href="./index.php">
-          <img src="../../../img/back.svg" alt="Volver" />
-        </a>
         <p class="h2">Transferir</p>
       </nav>
       <div class="container-usuario-creado container-white">

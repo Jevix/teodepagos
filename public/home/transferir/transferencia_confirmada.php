@@ -66,9 +66,6 @@ if ($cuit) {
   <body>
     <section class="main">
       <nav class="navbar">
-        <a href="./index.php">
-          <img src="../img/back.svg" alt="" />
-        </a>
         <p class="h2">Transferir</p>
       </nav>
       <div class="container-usuario-creado container-white">

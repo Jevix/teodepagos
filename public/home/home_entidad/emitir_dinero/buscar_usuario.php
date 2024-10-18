@@ -78,32 +78,7 @@ try {
     echo "Error al obtener movimientos: " . $e->getMessage();
 }
 
-// Consultar usuarios y entidades por nombre o DNI ingresado
-if ($dniNombre) {
-    try {
-        // Consulta para obtener usuarios
-        $stmtUsuarios = $pdo->prepare("
-            SELECT nombre_apellido, dni 
-            FROM usuarios 
-            WHERE nombre_apellido LIKE :dniNombre OR dni LIKE :dniNombre 
-            LIMIT 5
-        ");
-        $stmtUsuarios->execute(['dniNombre' => "%$dniNombre%"]);
-        $usuarios = $stmtUsuarios->fetchAll(PDO::FETCH_ASSOC);
 
-        // Consulta para obtener entidades
-        $stmtEntidades = $pdo->prepare("
-            SELECT nombre_entidad, cuit 
-            FROM entidades 
-            WHERE nombre_entidad LIKE :dniNombre OR cuit LIKE :dniNombre 
-            LIMIT 5
-        ");
-        $stmtEntidades->execute(['dniNombre' => "%$dniNombre%"]);
-        $entidades = $stmtEntidades->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        echo "Error al buscar usuarios/entidades: " . $e->getMessage();
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="es">

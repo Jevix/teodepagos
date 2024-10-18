@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // Verificar si todos los campos necesarios están presentes
-    $campos_necesarios = ['nombre_apellido', 'dni', 'password', 'tipo_usuario'];
+    $campos_necesarios = ['nombre_entidad', 'cuit', 'tipo_entidad'];
     $campos_faltantes = [];
 
     foreach ($campos_necesarios as $campo) {
@@ -44,58 +44,51 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo json_encode(['error' => "Faltan los siguientes datos: " . implode(', ', $campos_faltantes)]);
     } else {
         // Obtener los datos enviados desde la API
-        $nombre_apellido = trim($data['nombre_apellido']);
-        $dni = trim($data['dni']);
-        $password = isset($data['password']) ? $data['password'] : "default_password";  // Asignar contraseña predeterminada si no se especifica
-        $tipo_usuario = trim($data['tipo_usuario']);
-        $saldo = isset($data['saldo']) ? floatval($data['saldo']) : 0;  // Asignar saldo predeterminado si no está presente
-        $id_entidad = isset($data['id_entidad']) ? intval($data['id_entidad']) : null;  // Solo será usado si es 'Miembro'
+        $nombre_entidad = trim($data['nombre_entidad']);
+        $cuit = trim($data['cuit']);
+        $tipo_entidad = trim($data['tipo_entidad']);
+        $saldo = isset($data['saldo']) ? $data['saldo'] : 0;  // Asignar saldo predeterminado si no está presente
 
-        // Validar el tipo de usuario
-        if (!in_array($tipo_usuario, ['Usuario', 'Miembro'])) {
-            echo json_encode(['error' => 'Tipo de usuario no válido.']);
+        // Validar que CUIT sea numérico y tenga exactamente 11 dígitos
+        if (!is_numeric($cuit) || strlen($cuit) != 11) {
+            echo json_encode(['error' => 'El CUIT debe tener 11 dígitos y contener solo números.']);
             exit();
         }
 
-        // Crear la consulta SQL para insertar el usuario
-        $sql = "INSERT INTO usuarios (nombre_apellido, dni, password, tipo_usuario, id_entidad, saldo) 
-                VALUES (:nombre_apellido, :dni, :password, :tipo_usuario, :id_entidad, :saldo)";
+        // Verificar que el saldo sea numérico y no negativo
+        if (!is_numeric($saldo) || $saldo < 0) {
+            echo json_encode(['error' => 'El saldo debe ser un número válido y no puede ser negativo.']);
+            exit();
+        }
+
+        // Crear la consulta SQL para insertar la entidad
+        $sql = "INSERT INTO entidades (nombre_entidad, cuit, tipo_entidad, saldo) 
+                VALUES (:nombre_entidad, :cuit, :tipo_entidad, :saldo)";
 
         // Preparar la consulta con PDO
         $stmt = $pdo->prepare($sql);
 
-        // Verificar si es un Usuario o un Miembro
-        if ($tipo_usuario === 'Usuario') {
-            $id_entidad = null;  // Asegurar que id_entidad sea NULL si el tipo es 'Usuario'
-        }
-
         // Ejecutar la consulta
         try {
             $stmt->execute([
-                ':nombre_apellido' => $nombre_apellido,
-                ':dni' => $dni,
-                ':password' => $password,  // Asegúrate de cifrar las contraseñas en producción
-                ':tipo_usuario' => $tipo_usuario,
-                ':id_entidad' => $id_entidad,
+                ':nombre_entidad' => $nombre_entidad,
+                ':cuit' => $cuit,
+                ':tipo_entidad' => $tipo_entidad,
                 ':saldo' => $saldo
             ]);
 
-            echo json_encode(['success' => "Usuario registrado correctamente."]);
+            echo json_encode(['success' => "Entidad registrada correctamente."]);
 
         } catch (PDOException $e) {
-            echo json_encode(['error' => "Error al insertar el usuario: " . $e->getMessage()]);
+            echo json_encode(['error' => "Error al insertar la entidad: " . $e->getMessage()]);
         }
     }
-} elseif ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['accion']) && $_GET['accion'] === 'cargar_usuarios') {
-    // Aquí ejecutamos el script Python al recibir una solicitud GET para cargar usuarios
-    $output = shell_exec('python3 api_carga_usuarios.py 2>&1');
-    
-    // Verificamos si se ejecutó correctamente
-    if (strpos($output, 'Error') === false) {
-        echo "Se cargaron los usuarios correctamente.";
-    } else {
-        echo "Error al cargar los usuarios: $output";
-    }
+} elseif ($_SERVER['REQUEST_METHOD'] == 'GET') {
+    // Aquí ejecutamos el script Python al recibir una solicitud GET
+    $output = shell_exec('python3 api_carga_entidades.py 2>&1');
+    echo "<pre>$output</pre>";
 } else {
-    echo json_encode(['error' => 'Solo se aceptan solicitudes POST para registrar usuarios o GET con "accion=cargar_usuarios" para cargar usuarios.']);
+    echo json_encode(['error' => 'Solo se aceptan solicitudes POST y GET.']);
 }
+
+?>

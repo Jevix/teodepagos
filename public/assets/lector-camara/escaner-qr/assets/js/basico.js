@@ -11,10 +11,20 @@ function lecturaCorrecta(codigoTexto, codigoObjeto) {
 
     console.log(`Código QR leído: ${codigoTexto}`, codigoObjeto);
 
-    // Validar si el código contiene entre 8 y 11 números
+    // Validar si el código contiene 8 o 11 números
     if (/^\d{8,11}$/.test(codigoTexto)) {
-      // Si cumple con la validación, redirigir a otra página
-      window.location.href = `../../home/transferir/procesar_transferencia.php?dni=${encodeURIComponent(codigoTexto)}`;
+      let parametro;
+
+      if (codigoTexto.length === 8) {
+        // Si el código tiene 8 dígitos, se trata de un DNI
+        parametro = `dni=${encodeURIComponent(codigoTexto)}`;
+      } else if (codigoTexto.length === 11) {
+        // Si el código tiene 11 dígitos, se trata de un CUIT
+        parametro = `cuit=${encodeURIComponent(codigoTexto)}`;
+      }
+
+      // Redirigir a otra página con el parámetro adecuado
+      window.location.href = `../../home/transferir/procesar_transferencia.php?${parametro}`;
     } else {
       // Mostrar mensaje de error y reactivar el escáner al aceptar
       swal.fire({
@@ -32,9 +42,7 @@ function lecturaCorrecta(codigoTexto, codigoObjeto) {
 
 // Función para manejar errores en el escaneo
 function errorLectura(error) {
- 
   console.error(error);
-  
 }
 
 // Inicializar el escáner de QR
