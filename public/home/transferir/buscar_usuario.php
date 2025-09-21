@@ -119,7 +119,7 @@ LIMIT 5;
                 <?php endif; ?>
             </div>
             <div class="right">
-            <p class="h4 text--blue">$<?= number_format($movimiento['monto'], 0, '', '.'); ?></p>
+            <p class="h4 text--blue">$<?= number_format($movimiento['monto'], 0, ',', '.'); ?></p>
             </div>
         </div>
     <?php endforeach; ?>
@@ -148,12 +148,15 @@ LIMIT 5;
     });
 
     function redirigir(tipo, valor, monto) {
+    // Formatear el monto en miles con punto
+    let montoFormateado = parseInt(monto).toLocaleString('de-DE'); // Esto convierte a '10.000' por ejemplo
+
     if (tipo === 'usuario') {
-        // Redirigir a la página de usuario con el DNI y monto
-        window.location.href = `procesar_transferencia.php?dni=${valor}&monto=${monto}`;
+        // Redirigir a la página de usuario con el DNI y monto formateado
+        window.location.href = `procesar_transferencia.php?dni=${valor}&monto=${montoFormateado}`;
     } else if (tipo === 'entidad') {
-        // Redirigir a la página de entidad con el CUIT y monto
-        window.location.href = `procesar_transferencia.php?cuit=${valor}&monto=${monto}`;
+        // Redirigir a la página de entidad con el CUIT y monto formateado
+        window.location.href = `procesar_transferencia.php?cuit=${valor}&monto=${montoFormateado}`;
     }
 }
 

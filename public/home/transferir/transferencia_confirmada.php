@@ -6,7 +6,7 @@ if (!isset($_SESSION['id_usuario'])) {
 }
 // Verificar si se ha pasado el monto y el nombre del destinatario
 if (!isset($_GET['monto']) || (!isset($_GET['dni']) && !isset($_GET['cuit']))) {
-    die("Faltan datos para completar la confirmación de la transferencia.");
+    
 }
 
 $monto = htmlspecialchars($_GET['monto']);

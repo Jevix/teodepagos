@@ -116,12 +116,14 @@ try {
     // Confirmar la transacción
     $pdo->commit();
 
+    $fecha = urlencode(date('Y-m-d H:i:s'));  // Generar la fecha en el formato correcto
+
     if ($dni) {
-        // Redirigir con datos del usuario
-        header("Location: ./transferencia_confirmada.php?monto={$monto}&dni={$dni}&nombre={$destinatario['nombre_apellido']}&fecha=" . urlencode(date('d/m H:i')));
+        // Redirigir con datos del usuario y fecha
+        header("Location: ./transferencia_confirmada.php?monto={$monto}&dni={$dni}&nombre={$destinatario['nombre_apellido']}&fecha={$fecha}");
     } elseif ($cuit) {
-        // Redirigir con datos de la entidad
-        header("Location: ./transferencia_confirmada.php?monto={$monto}&cuit={$cuit}&nombre_entidad={$entidad['nombre_entidad']}&fecha=" . urlencode(date('d/m H:i')));
+        // Redirigir con datos de la entidad y fecha
+        header("Location: ./transferencia_confirmada.php?monto={$monto}&cuit={$cuit}&nombre_entidad={$entidad['nombre_entidad']}&fecha={$fecha}");
     }
     exit;
 } catch (Exception $e) {

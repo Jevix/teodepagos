@@ -131,7 +131,7 @@ if (empty($dni) && empty($cuit)) {
         </div>
 
         <div class="dinero-disponible">
-          <p class="h4">Tu dinero disponible: $<?= number_format($saldo_sesion, 2, ',', '.'); ?></p>
+          <p class="h4">Tu dinero disponible: $<?= number_format($saldo_sesion, 0, ',', '.'); ?></p>
           <div>
             <p class="h1">$</p>
             <p class="h1" id="display" oninput="toggleBtn()"><?= htmlspecialchars($monto); ?></p>
@@ -168,50 +168,52 @@ if (empty($dni) && empty($cuit)) {
     </section>
 
     <script>
-      const display = document.getElementById("display");
-      const submitButton = document.getElementById("submitButton");
+  const display = document.getElementById("display");
+  const submitButton = document.getElementById("submitButton");
+  const saldoSesion = <?= $saldo_sesion; ?>; // El saldo disponible de la entidad logueada
 
-      function agregarNum(number) {
-        let value = display.textContent;
-        if (value === "0") {
-          value = number.toString();
-        } else if (value.length < 12) {
-          value += number.toString();
-        }
-        value = value.replace(/\./g, "");
-        if (value.length > 3) {
-          value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        }
-        display.textContent = value;
-        toggleBtn();
-      }
+  function agregarNum(number) {
+    let value = display.textContent;
+    if (value === "0") {
+      value = number.toString();
+    } else if (value.length < 12) {
+      value += number.toString();
+    }
+    value = value.replace(/\./g, "");
+    if (value.length > 3) {
+      value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+    display.textContent = value;
+    toggleBtn();
+  }
 
-      function borrar() {
-        let value = display.textContent.replace(/\./g, "");
-        if (value.length > 1) {
-          value = value.slice(0, -1);
-        } else {
-          value = "0";
-        }
-        value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        display.textContent = value;
-        toggleBtn();
-      }
+  function borrar() {
+    let value = display.textContent.replace(/\./g, "");
+    if (value.length > 1) {
+      value = value.slice(0, -1);
+    } else {
+      value = "0";
+    }
+    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    display.textContent = value;
+    toggleBtn();
+  }
 
-      function toggleBtn() {
-        let valorDisplay = display.innerHTML;
-        if (valorDisplay !== "0") {
-          submitButton.classList.remove("submit--off");
-          submitButton.classList.add("submit--on");
-          submitButton.disabled = false;
-        } else {
-          submitButton.classList.remove("submit--on");
-          submitButton.classList.add("submit--off");
-          submitButton.disabled = true;
-        }
-      }
+  function toggleBtn() {
+    const valorDisplay = parseFloat(display.textContent.replace(/\./g, ''));
+    
+    if (valorDisplay !== 0 && valorDisplay <= saldoSesion) {
+      submitButton.classList.remove("submit--off");
+      submitButton.classList.add("submit--on");
+      submitButton.disabled = false;
+    } else {
+      submitButton.classList.remove("submit--on");
+      submitButton.classList.add("submit--off");
+      submitButton.disabled = true;
+    }
+  }
 
-      function transferir() {
+  function transferir() {
     const display = document.getElementById("display");
     const loader = document.getElementById("loader");
 
@@ -258,7 +260,8 @@ if (empty($dni) && empty($cuit)) {
     setTimeout(() => {
         form.submit(); // Enviar el formulario después del retardo
     }, 2000); // Puedes ajustar el tiempo de la simulación de carga
-}
-    </script>
+  }
+</script>
+
   </body>
 </html>

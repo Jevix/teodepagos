@@ -1,0 +1,6 @@
+# Asegúrate de que el módulo de reescritura esté habilitado
+RewriteEngine On
+
+# Redirige todas las solicitudes a la carpeta 'public'
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^(.*)$ /public/$1 [L]

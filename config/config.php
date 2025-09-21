@@ -3,7 +3,7 @@ return [
     'db_host' => 'localhost',
     'db_name' => 'teodepagos',
     'db_user' => 'root',
-    'db_pass' => ''
+    'db_pass' => 'teodepago123teodelina'
 ];
 
 ?>
