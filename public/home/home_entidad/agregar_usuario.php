@@ -125,10 +125,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
 
         } catch (Exception $e) {
-            // Si ocurre un error, hacer rollback y mostrar el mensaje de error
             $pdo->rollBack();
-            $mensaje = "Error: " . $e->getMessage();
-        }
+            
+            // Si el error viene de MySQL por longitud de cuit
+            if (strpos($e->getMessage(), 'Data too long for column \'cuit\'') !== false) {
+                $mensaje = "El número de CUIT no es válido. Ingresalo sin guiones y con un máximo de 11 dígitos.";
+            } else {
+                $mensaje = "Error: " . $e->getMessage();
+            }
+}
+
     }
 }
 ?>
@@ -227,7 +233,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <div>
                             <label for="cuit" class="h3 text--black">CUIT</label>
-                            <input type="text" name="cuit" id="cuit" />
+                           <input 
+                                type="text" 
+                                name="cuit" 
+                                id="cuit" 
+                                maxlength="11" 
+                                pattern="\d{11}" 
+                                title="El CUIT debe tener exactamente 11 dígitos sin guiones." 
+                                oninput="this.value = this.value.replace(/\D/g, '').slice(0,11)" 
+                            />
+
                         </div>
                         <div>
                             <label for="nombreResponsable" class="h3 text--black">Nombre del responsable</label>
@@ -239,8 +254,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <div>
                             <label for="dniResponsable" class="h3 text--black">DNI del responsable</label>
-                            <input type="text" name="dniResponsable" id="dniResponsable"/>
-                        </div>
+                            <input 
+                                type="text" 
+                                name="dniResponsable" 
+                                id="dniResponsable" 
+                                maxlength="9" 
+                                pattern="\d{7,9}" 
+                                title="El DNI debe tener entre 7 y 9 dígitos, solo números." 
+                                oninput="this.value = this.value.replace(/\D/g, '').slice(0,9)" 
+                            />          
+              </div>
                         <div>
                             <label for="fechaNacimientoResponsable" class="h3 text--black">Fecha de nacimiento del responsable</label>
                             <input type="text" name="fechaNacimientoResponsable" id="fechaNacimientoResponsable" />

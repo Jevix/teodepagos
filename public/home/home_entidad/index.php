@@ -135,8 +135,13 @@ if (!isset($_SESSION['id_entidad'])) {
             </div>
          </nav>
          <div class="dinero">
-            <p class="h2">Saldo disponible</p>
-            <p class="h1">$ <?php echo number_format($entidad['saldo'], 0, ',', '.'); ?></p>
+    
+            <?php if ($entidad['tipo_entidad'] === 'Banco'): ?>
+               <p class="h1 text--info">Entidad bancaria</p>
+            <?php else: ?>
+               <p class="h2">Saldo disponible</p>
+               <p class="h1">$ <?php echo number_format($entidad['saldo'], 0, ',', '.'); ?></p>
+            <?php endif; ?>
          </div>
          <div class="transacciones">
             <?php if ($entidad['tipo_entidad'] === 'Banco'): ?>
