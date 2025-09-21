@@ -1,96 +1,154 @@
--- Borrar tablas si ya existen
+-- === LIMPIEZA ===============================================================
 DROP TABLE IF EXISTS movimientos_saldo;
 DROP TABLE IF EXISTS usuarios;
 DROP TABLE IF EXISTS entidades;
 
--- Crear tabla entidades
+-- === ENTIDADES ==============================================================
 CREATE TABLE entidades (
     id_entidad INT AUTO_INCREMENT PRIMARY KEY,
     nombre_entidad VARCHAR(50) NOT NULL,
     cuit VARCHAR(11) NOT NULL UNIQUE,
-    tipo_entidad ENUM('Empresa', 'Banco') NOT NULL, -- La entidad puede ser empresa o banco
-    saldo DECIMAL(10,0) DEFAULT 0 CHECK (saldo >= 0)
+    tipo_entidad ENUM('Empresa','Banco') NOT NULL,
+    saldo DECIMAL(10,0) NOT NULL DEFAULT 0,
+    CONSTRAINT chk_entidad_saldo CHECK (saldo >= 0)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Crear tabla usuarios con referencia a entidades
+-- === USUARIOS ============================================================== 
 CREATE TABLE usuarios (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     nombre_apellido VARCHAR(40) NOT NULL,
-    dni VARCHAR(8) UNIQUE NOT NULL,
-    password VARCHAR(8) NOT NULL, -- Contraseñas sin cifrar, ddmmaaaa
-    tipo_usuario ENUM('Usuario', 'Miembro') NOT NULL, -- Solo diferenciamos entre Usuario y Miembro
-    id_entidad INT DEFAULT NULL, -- Clave foránea hacia la tabla entidades
-    saldo DECIMAL(10,0) DEFAULT 0 CHECK (saldo >= 0),
-    CONSTRAINT chk_id_entidad CHECK (
-        (tipo_usuario = 'Usuario' AND id_entidad IS NULL) OR 
-        (tipo_usuario = 'Miembro' AND id_entidad IS NOT NULL)
-    ),
-    FOREIGN KEY (id_entidad) REFERENCES entidades(id_entidad) ON DELETE SET NULL
+    dni VARCHAR(8) NOT NULL UNIQUE,
+    -- OJO: en producción conviene hash (VARCHAR(60)), acá dejamos 8 como pediste
+    password VARCHAR(8) NOT NULL,
+    tipo_usuario ENUM('Usuario','Miembro') NOT NULL,
+    id_entidad INT NULL,                        -- FK opcional
+    saldo DECIMAL(10,0) NOT NULL DEFAULT 0,
+    CONSTRAINT chk_usuario_saldo CHECK (saldo >= 0),
+    CONSTRAINT fk_usuarios_entidad
+      FOREIGN KEY (id_entidad) REFERENCES entidades(id_entidad)
+      ON DELETE SET NULL
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Crear tabla movimientos_saldo
+-- === MOVIMIENTOS ============================================================
 CREATE TABLE movimientos_saldo (
     id_transaccion INT AUTO_INCREMENT PRIMARY KEY,
-    id_remitente_usuario INT DEFAULT NULL,
-    id_remitente_entidad INT DEFAULT NULL,
-    monto DECIMAL(10,2) NOT NULL CHECK (monto >= 1),
-    tipo_movimiento ENUM('Ingreso', 'Egreso', 'Prestamo','Recarga') NOT NULL,
-    id_destinatario_usuario INT DEFAULT NULL,
-    id_destinatario_entidad INT DEFAULT NULL,
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_remitente_usuario) REFERENCES usuarios(id_usuario),
-    FOREIGN KEY (id_remitente_entidad) REFERENCES entidades(id_entidad),
+    id_remitente_usuario INT NULL,
+    id_remitente_entidad INT NULL,
+    monto DECIMAL(10,2) NOT NULL,
+    tipo_movimiento ENUM('Ingreso','Egreso','Prestamo','Recarga','Error') NOT NULL,
+    id_destinatario_usuario INT NULL,
+    id_destinatario_entidad INT NULL,
+    fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_mov_monto CHECK (monto >= 1),
+    FOREIGN KEY (id_remitente_usuario)    REFERENCES usuarios(id_usuario),
+    FOREIGN KEY (id_remitente_entidad)    REFERENCES entidades(id_entidad),
     FOREIGN KEY (id_destinatario_usuario) REFERENCES usuarios(id_usuario),
     FOREIGN KEY (id_destinatario_entidad) REFERENCES entidades(id_entidad)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- Establecer el valor inicial del AUTO_INCREMENT
+
 ALTER TABLE movimientos_saldo AUTO_INCREMENT = 31415;
 
-
--- Trigger para validar CUIT
+-- === TRIGGERS DE VALIDACIÓN ================================================
 DELIMITER $$
-CREATE TRIGGER validar_cuit
+
+-- CUIT: 11 dígitos numéricos
+CREATE TRIGGER trg_entidades_validar_cuit
 BEFORE INSERT ON entidades
 FOR EACH ROW
 BEGIN
-    IF CHAR_LENGTH(NEW.cuit) != 11 OR NEW.cuit NOT REGEXP '^[0-9]+$' THEN
+    IF CHAR_LENGTH(NEW.cuit) <> 11 OR NEW.cuit NOT REGEXP '^[0-9]+$' THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'CUIT debe tener 11 dígitos y contener solo números';
+        SET MESSAGE_TEXT = 'CUIT debe tener 11 dígitos numéricos';
     END IF;
-END $$
-DELIMITER ;
+END$$
 
-
--- Trigger para validar Dni
-DELIMITER $$
-CREATE TRIGGER validar_dni
+-- DNI: 8 dígitos numéricos
+CREATE TRIGGER trg_usuarios_validar_dni
 BEFORE INSERT ON usuarios
 FOR EACH ROW
 BEGIN
-    IF CHAR_LENGTH(NEW.dni) != 8 OR NEW.dni NOT REGEXP '^[0-9]+$' THEN
+    IF CHAR_LENGTH(NEW.dni) <> 8 OR NEW.dni NOT REGEXP '^[0-9]+$' THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'DNI debe tener 8 dígitos y contener solo números';
+        SET MESSAGE_TEXT = 'DNI debe tener 8 dígitos numéricos';
     END IF;
-END $$
+END$$
+
+-- Reglas de pertenencia según tipo_usuario (INSERT)
+--  Usuario  -> id_entidad debe ser NULL
+--  Miembro  -> id_entidad debe ser NOT NULL
+CREATE TRIGGER trg_usuarios_chk_tipo_entidad_ins
+BEFORE INSERT ON usuarios
+FOR EACH ROW
+BEGIN
+    IF NEW.tipo_usuario = 'Usuario' AND NEW.id_entidad IS NOT NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Usuario no debe tener id_entidad (debe ser NULL)';
+    END IF;
+    IF NEW.tipo_usuario = 'Miembro' AND NEW.id_entidad IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Miembro debe tener id_entidad (no puede ser NULL)';
+    END IF;
+END$$
+
+-- (UPDATE) misma regla al actualizar
+CREATE TRIGGER trg_usuarios_chk_tipo_entidad_upd
+BEFORE UPDATE ON usuarios
+FOR EACH ROW
+BEGIN
+    IF NEW.tipo_usuario = 'Usuario' AND NEW.id_entidad IS NOT NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Usuario no debe tener id_entidad (debe ser NULL)';
+    END IF;
+    IF NEW.tipo_usuario = 'Miembro' AND NEW.id_entidad IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Miembro debe tener id_entidad (no puede ser NULL)';
+    END IF;
+END$$
+
+-- Evitar saldos negativos por error (opcionalmente podrías manejar esto en lógica de negocio)
+CREATE TRIGGER trg_entidades_no_negativo
+BEFORE UPDATE ON entidades
+FOR EACH ROW
+BEGIN
+    IF NEW.saldo < 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Saldo de entidad no puede ser negativo';
+    END IF;
+END$$
+
+CREATE TRIGGER trg_usuarios_no_negativo
+BEFORE UPDATE ON usuarios
+FOR EACH ROW
+BEGIN
+    IF NEW.saldo < 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Saldo de usuario no puede ser negativo';
+    END IF;
+END$$
+
 DELIMITER ;
 
+-- === DATOS DE PRUEBA =======================================================
 
-
-INSERT INTO usuarios (nombre_apellido, dni, password, tipo_usuario, saldo) 
-VALUES ('Javier Caceres', '42926423', '3595', 'Usuario', 10000.00);
-
-INSERT INTO usuarios (nombre_apellido, dni, password, tipo_usuario, saldo) 
-VALUES ('Nahuel Croco', '43992532', '12052002', 'Usuario', 10000.00);
-
-INSERT INTO usuarios (nombre_apellido, dni, password, tipo_usuario, saldo) 
-VALUES ('Nahuel Andrade', '44429156', '12112002', 'Usuario', 10000.00);
-
-
--- Insertar Empresa 1
+-- Entidades (empresas)
 INSERT INTO entidades (nombre_entidad, cuit, tipo_entidad, saldo)
-VALUES ('TechCorp S.A.', '20345678901', 'Empresa', 10000.00);
+VALUES ('TechCorp S.A.',   '20345678901', 'Empresa', 10000),
+       ('FinancePro Ltd.', '20456789012', 'Empresa', 25000);
 
--- Insertar Empresa 2
-INSERT INTO entidades (nombre_entidad, cuit, tipo_entidad, saldo)
-VALUES ('FinancePro Ltd.', '20456789012', 'Empresa', 25000.50);
+-- Usuarios sin entidad (tipo Usuario)
+INSERT INTO usuarios (nombre_apellido, dni, password, tipo_usuario, saldo)
+VALUES ('Javier Caceres',  '42926423', '3595',     'Usuario', 10000),
+       ('Nahuel Croco',    '43992532', '12052002', 'Usuario', 10000),
+       ('Nahuel Andrade',  '44429156', '12112002', 'Usuario', 10000);
 
+-- Usuario Miembro asociado a una entidad (ej: TechCorp S.A. id=1)
+INSERT INTO usuarios (nombre_apellido, dni, password, tipo_usuario, id_entidad, saldo)
+VALUES ('María López', '40111222', '01012000', 'Miembro', 1, 15000);
+
+-- Movimientos demo
+INSERT INTO movimientos_saldo
+(id_remitente_usuario, id_destinatario_usuario, monto, tipo_movimiento)
+VALUES
+(1, 2, 1500.00, 'Egreso'),     -- Javier envía a Nahuel C. (para Javier es egreso, para Nahuel ingreso)
+(2, 1,  500.00, 'Ingreso'),    -- Nahuel C. recibe (para él ingreso)
+(NULL, 1, 2000.00, 'Recarga'); -- Recarga del “sistema/banco” hacia Javier
