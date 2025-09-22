@@ -45,64 +45,94 @@ if ($usuario && !empty($usuario['id_entidad'])) {
 <html lang="es" translate="no">
 <head>
   <meta charset="UTF-8" />
- <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Home</title>
   <link rel="stylesheet" href="../styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-    rel="stylesheet"
-  />
-  <style>
-    html {
-  -webkit-text-size-adjust: 100%;
-  -ms-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
 
-    body {
-      background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
-    }
+  <style>
+    html { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; text-size-adjust:100%; }
+    body { background: linear-gradient(199deg, #324798 0%, #101732 65.93%); }
+
+    /* Modal de logout existente */
     .bg-ventana-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
+      position: fixed; top:0; left:0; width:100%; height:100%;
+      background-color: rgba(0,0,0,.5);
       backdrop-filter: blur(10px);
-      display: none;
-      justify-content: center;
-      align-items: center;
+      display: none; justify-content: center; align-items: center;
       z-index: 1000;
     }
     .ventana-modal {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
-      z-index: 1001;
+      background: #fff; padding: 20px; border-radius: 10px; text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,.1); z-index: 1001;
     }
+
+    /* Loader */
     .loader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(255, 255, 255, 0.7);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
+      position: fixed; inset: 0; background-color: rgba(255,255,255,.7);
+      display: flex; justify-content: center; align-items: center; z-index: 9999;
     }
+
+    /* ====== Modal de cámara (único) ====== */
+    .cam-modal-backdrop{
+      position: fixed; inset: 0;
+      display: grid; place-items: center;
+      background: rgba(2,6,23,.55);
+      backdrop-filter: blur(6px);
+      z-index: 10000;
+      animation: cam-fade .18s ease-out;
+    }
+    @keyframes cam-fade { from{ opacity:0 } to{ opacity:1 } }
+
+    .cam-modal{
+      width: 272px;
+      border-radius: 16px;
+      background: #fff; color: #0f172a;
+      box-shadow: 0 24px 70px -28px rgba(0,0,0,.45);
+      padding: 20px 20px 16px; position: relative;
+      animation: cam-pop .18s ease-out;
+    }
+    @keyframes cam-pop { from{ transform: translateY(6px); opacity:.98 } to{ transform:none; opacity:1 } }
+
+    .cam-close{
+      position: absolute; top: 10px; right: 10px;
+      border: 0; background: transparent; font-size: 18px; cursor: pointer; color: #334155;
+    }
+    .cam-header{ display:flex; align-items:center; gap:10px; margin-bottom: 6px; }
+    .cam-header svg{ color:#324798 }
+    .cam-header h2{ margin:0; font-size: 20px; }
+
+    .cam-subtitle{ margin: 8px 0 10px; color:#475569 }
+    .cam-bullets{ margin: 0 0 10px 18px; color:#334155 }
+    .cam-bullets li{ margin: 6px 0 }
+
+    .cam-actions{ display:flex; gap:10px; flex-wrap:wrap; margin: 6px 0 8px; justify-content: center;}
+
+    .cam-btn-primary{
+      appearance: none; border:0; cursor:pointer; font-weight:600;
+      border-radius: 999px; padding: 10px 16px; color:#fff; background:#324798;
+      box-shadow: 0 10px 22px -12px rgba(50,71,152,.55);
+      transition: transform .06s ease, box-shadow .18s ease;
+    }
+    .cam-btn-primary:hover{ transform: translateY(-1px); box-shadow: 0 12px 28px -14px rgba(50,71,152,.55); }
+    .cam-btn-primary:active{ transform:none; box-shadow: 0 5px 14px -10px rgba(50,71,152,.55); }
+
+    .cam-btn-ghost{
+      appearance: none; border:1px solid #e2e8f0; background:#fff; color:#0f172a;
+      border-radius: 999px; padding: 10px 16px; cursor:pointer; font-weight:600;
+    }
+
+    .cam-footnote{ margin: 4px 0 0; color:#64748b; font-size: .92rem; }
+    .cam-modal-backdrop[hidden] { 
+  display: none !important; 
+}
   </style>
 </head>
 <body>
   <!-- Loader -->
-  <div id="loader" class="loader" style="display: none;">
+  <div id="loader" class="loader" style="display:none;">
     <img src="../img/loader.gif" alt="Cargando..." />
   </div>
 
@@ -112,8 +142,8 @@ if ($usuario && !empty($usuario['id_entidad'])) {
       <div class="left">
         <img src="../img/saludo.svg" alt="" />
         <div>
-          <p class="documento"><?php echo $usuario['dni']; ?></p>
-          <p class="nombre"><?php echo $usuario['nombre_apellido']; ?></p>
+          <p class="documento"><?php echo htmlspecialchars($usuario['dni']); ?></p>
+          <p class="nombre"><?php echo htmlspecialchars($usuario['nombre_apellido']); ?></p>
         </div>
       </div>
       <div class="right">
@@ -126,7 +156,7 @@ if ($usuario && !empty($usuario['id_entidad'])) {
     <!-- SALDO -->
     <div class="dinero">
       <p class="h2">Dinero disponible</p>
-      <p class="h1">$ <?php echo number_format($usuario['saldo'], 0, ',', '.'); ?></p>
+      <p class="h1">$ <?php echo number_format((float)$usuario['saldo'], 0, ',', '.'); ?></p>
     </div>
 
     <!-- TRANSACCIONES -->
@@ -139,7 +169,7 @@ if ($usuario && !empty($usuario['id_entidad'])) {
         <img src="../img/qr.svg" alt="" />
         <p class="hb">Tu QR</p>
       </div>
-      <div <?php echo (!empty($entidad) && $entidad['tipo_entidad'] === 'Empresa') ? '' : 'style="display: none;"'; ?>>
+      <div <?php echo (!empty($entidad) && $entidad['tipo_entidad'] === 'Empresa') ? '' : 'style="display:none;"'; ?>>
         <a onclick="showLoaderAndRedirect('home_entidad/')">
           <img src="../img/empresa-black.svg" alt="" />
         </a>
@@ -165,10 +195,36 @@ if ($usuario && !empty($usuario['id_entidad'])) {
       <p class="h2 text--darkblue">Estás por salir de tu cuenta.</p>
       <div>
         <button class="btn-modal-1 h3 text--blue" onclick="hideModalLogout()">Cancelar</button>
-        <button class="btn-modal-2 h3" onclick="logout()" style="width: 149px;">Cerrar sesión</button>
+        <button class="btn-modal-2 h3" onclick="logout()" style="width:149px;">Cerrar sesión</button>
       </div>
     </div>
   </div>
+
+  <!-- ===== Modal único de permiso de cámara ===== -->
+<div id="cam-modal" class="cam-modal-backdrop" hidden>
+  <div class="cam-modal" role="dialog" aria-labelledby="cam-modal-title" aria-modal="true">
+    <button type="button" class="cam-close" aria-label="Cerrar" id="cam-close-btn">✕</button>
+
+    <div class="cam-header">
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M4 5h11l3 3h2a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/>
+      </svg>
+      <h2 id="cam-modal-title">Permiso de cámara</h2>
+    </div>
+
+    <p class="cam-subtitle">
+      Necesitamos acceso a la cámara para escanear tus códigos QR.  
+      El permiso se usa solo en esta función.
+    </p>
+
+    <div class="cam-actions">
+      <button type="button" id="cam-enable-btn" class="cam-btn-primary">Habilitar</button>
+      <button type="button" id="cam-later-btn" class="cam-btn-ghost">Después</button>
+    </div>
+  </div>
+</div>
+
+  
 
   <script>
     function showLoaderAndRedirect(url) {
@@ -179,6 +235,7 @@ if ($usuario && !empty($usuario['id_entidad'])) {
 
     function showModalLogout() {
       document.querySelector('.bg-ventana-modal').style.display = 'flex';
+      // No bloquear scroll del body acá (ya tenés backdrop propio)
     }
 
     function hideModalLogout() {
@@ -196,7 +253,7 @@ if ($usuario && !empty($usuario['id_entidad'])) {
     const containerBtn = document.getElementById('container-btn');
 
     function fmtMonto(n) {
-      const abs = Math.abs(n);
+      const abs = Math.abs(Number(n) || 0);
       return (n < 0 ? '-' : '+') + '$' + abs.toLocaleString('es-AR', { maximumFractionDigits: 0 });
     }
     function iconPath(name) {
@@ -222,7 +279,6 @@ if ($usuario && !empty($usuario['id_entidad'])) {
 
         const data = await res.json();
         const items = Array.isArray(data.items) ? data.items : [];
-        console.log(items);
 
         if (items.length === 0) {
           listEl.innerHTML = `
@@ -232,18 +288,14 @@ if ($usuario && !empty($usuario['id_entidad'])) {
           return;
         }
 
-        // Render primeros 3
         items.slice(0, VISIBLE_COUNT).forEach(renderMovimiento);
 
-        // Agregar botón si hay más
         const total = (typeof data.total === 'number') ? data.total : items.length;
         if (total > VISIBLE_COUNT) {
           const btnMas = document.createElement('button');
           btnMas.className = "btn-primary";
           btnMas.textContent = "Historial de movimientos";
-          btnMas.addEventListener('click', () => {
-            window.location.href = './movimientos.php';
-          });
+          btnMas.addEventListener('click', () => { window.location.href = './movimientos.php'; });
           containerBtn.appendChild(btnMas);
         }
 
@@ -276,12 +328,10 @@ if ($usuario && !empty($usuario['id_entidad'])) {
 
         const pMonto = document.createElement('p');
         if (item.tag === 'error') {
-          // Caso especial para Error
           pMonto.className = 'h4 text--neutral';
           pMonto.textContent = '$' + (item.monto ?? 0).toLocaleString('es-AR', { maximumFractionDigits: 0 });
         } else {
-          // Comportamiento normal
-          pMonto.className = 'h4 ' + (item.montoSigned < 0 ? 'text--minus' : 'text--plus');
+          pMonto.className = 'h4 ' + ((item.montoSigned ?? 0) < 0 ? 'text--minus' : 'text--plus');
           pMonto.textContent = fmtMonto(item.montoSigned ?? 0);
         }
 
@@ -315,7 +365,108 @@ if ($usuario && !empty($usuario['id_entidad'])) {
     }
 
     document.addEventListener('DOMContentLoaded', cargarMovimientos);
-    
   </script>
+
+  <!-- ===== Script del modal de cámara (único) ===== -->
+  <script>
+(() => {
+  const CAM_PRIME_KEY = 'cam_primed_v1';
+  const CAM_DISMISSED_AT = 'cam_dismissed_at';
+  const DISMISS_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutos
+
+  const $modal  = document.getElementById('cam-modal');
+  const $enable = document.getElementById('cam-enable-btn');
+  const $later  = document.getElementById('cam-later-btn');
+  const $close  = document.getElementById('cam-close-btn');
+
+  function openCamModal(){
+    if ($modal && $modal.hasAttribute('hidden')) {
+      $modal.removeAttribute('hidden');
+      $modal.style.display = ''; // por si quedó inline
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => $enable?.focus(), 0);
+    }
+  }
+
+  function closeCamModal(){
+    if ($modal && !$modal.hasAttribute('hidden')) {
+      $modal.setAttribute('hidden', '');
+      $modal.style.display = 'none';
+      document.body.style.overflow = '';
+
+      // Guardar marca de tiempo del descarte
+      sessionStorage.setItem(CAM_DISMISSED_AT, Date.now().toString());
+    }
+  }
+
+  function stopStream(stream){ try { stream.getTracks().forEach(t => t.stop()); } catch{} }
+
+  async function tryPrimeCamera(){
+    if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) return false;
+    if (!window.isSecureContext) return false; // HTTPS o localhost
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+      stopStream(stream);
+      localStorage.setItem(CAM_PRIME_KEY,'1');
+      return true;
+    } catch(e){
+      console.warn('[cam] getUserMedia error:', e?.name, e?.message);
+      return false;
+    }
+  }
+
+  async function initCamPermissionUX(){
+    // Si ya está primeado → no mostrar más
+    if (localStorage.getItem(CAM_PRIME_KEY) === '1') return;
+
+    // Chequear cooldown
+    const dismissedAt = Number(sessionStorage.getItem(CAM_DISMISSED_AT) || 0);
+    if (dismissedAt && Date.now() - dismissedAt < DISMISS_COOLDOWN_MS) {
+      console.log('[cam] Modal descartado hace menos de 5 min, no mostrar.');
+      return;
+    }
+
+    try {
+      if (navigator.permissions?.query){
+        const st = await navigator.permissions.query({ name: 'camera' });
+        if (st.state === 'granted') {
+          localStorage.setItem(CAM_PRIME_KEY,'1');
+          return;
+        }
+      }
+    } catch {}
+
+    setTimeout(openCamModal, 700);
+  }
+
+  // Eventos de cierre
+  $later?.addEventListener('click', closeCamModal);
+  $close?.addEventListener('click', closeCamModal);
+
+  // Cerrar al presionar Esc
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCamModal(); });
+
+  // Cerrar clickeando el fondo
+  $modal?.addEventListener('click', (e) => {
+    if (e.target === $modal) closeCamModal();
+  });
+
+  // Botón habilitar cámara
+  $enable?.addEventListener('click', async () => {
+    $enable.disabled = true;
+    const ok = await tryPrimeCamera();
+    if (ok) {
+      $enable.textContent = '¡Listo! ✔';
+      setTimeout(closeCamModal, 900);
+    } else {
+      $enable.disabled = false;
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', initCamPermissionUX);
+})();
+</script>
+
+
 </body>
 </html>
