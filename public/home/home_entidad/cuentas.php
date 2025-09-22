@@ -41,10 +41,13 @@ $search_query = isset($_GET['search']) ? $_GET['search'] : '';
 // Consulta para obtener los datos de entidades y usuarios con opción de búsqueda
 $query = "
     SELECT * FROM (
-        SELECT nombre_entidad AS nombre, cuit AS identificador, saldo, tipo_entidad AS tipo FROM entidades
-        WHERE nombre_entidad LIKE :search OR cuit LIKE :search
+        SELECT nombre_entidad AS nombre, cuit AS identificador, saldo, tipo_entidad AS tipo
+        FROM entidades
+        WHERE (nombre_entidad LIKE :search OR cuit LIKE :search)
+          AND tipo_entidad <> 'Banco'             -- 🔴 excluir bancos
         UNION ALL
-        SELECT nombre_apellido AS nombre, dni AS identificador, saldo, 'usuario' AS tipo FROM usuarios
+        SELECT nombre_apellido AS nombre, dni AS identificador, saldo, 'usuario' AS tipo
+        FROM usuarios
         WHERE nombre_apellido LIKE :search OR dni LIKE :search
     ) AS cuentas_combinadas
     ORDER BY nombre ASC
@@ -108,6 +111,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == 1) {
     <div class="container-white container-buscar-cuentas" id="listaCuentas">
         <!-- Aquí es donde se insertarán las cuentas dinámicamente -->
         <?php foreach ($cuentas as $cuenta): ?>
+            <?php if ($cuenta['tipo'] === 'Banco') continue; // safety ?>
           <div class="componente--usuario" onclick="redirigir('<?= htmlspecialchars($cuenta['identificador']); ?>')">
             <div class="left">
               <?php if ($cuenta['tipo'] === 'Banco'): ?>
@@ -160,6 +164,7 @@ function cargarMasCuentas() {
 
             // Agregar las nuevas cuentas
             data.forEach(cuenta => {
+              if (cuenta.tipo === 'Banco') return; // evitar render de bancos
                 const divCuenta = document.createElement('div');
                 divCuenta.classList.add('componente--usuario');
                 divCuenta.onclick = () => redirigir(cuenta.identificador);
