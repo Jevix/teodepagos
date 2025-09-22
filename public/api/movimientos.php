@@ -70,7 +70,7 @@ if ($for === 'entidad') {
     $descripcion = "CASE
                       WHEN ms.tipo_movimiento = 'Prestamo' THEN 'Préstamo'
                       WHEN ms.tipo_movimiento = 'Recarga'  THEN 'Recarga de saldo'
-                      WHEN ms.tipo_movimiento = 'Error'    THEN 'Edición de saldo'
+                      WHEN ms.tipo_movimiento = 'Error'    THEN 'Ajuste aplicado'
                       WHEN ms.id_destinatario_entidad = :actor THEN 'Transferencia recibida'
                       WHEN ms.id_remitente_entidad    = :actor THEN 'Transferencia enviada'
                       ELSE 'Movimiento'
@@ -132,7 +132,7 @@ if ($for === 'entidad') {
     $descripcion = "CASE
                       WHEN ms.tipo_movimiento = 'Prestamo' THEN 'Préstamo'
                       WHEN ms.tipo_movimiento = 'Recarga'  THEN 'Recarga de saldo'
-                      WHEN ms.tipo_movimiento = 'Error'    THEN 'Edición de saldo'
+                      WHEN ms.tipo_movimiento = 'Error'    THEN 'Ajuste aplicado'
                       WHEN ms.id_destinatario_usuario = :actor THEN 'Transferencia recibida'
                       WHEN ms.id_remitente_usuario    = :actor THEN 'Transferencia enviada'
                       ELSE 'Movimiento'
@@ -226,7 +226,10 @@ SELECT
   ($signo)       AS signo,
   ($descripcion) AS descripcion,
   ($contraparte) AS contraparte,
-  ($icono)       AS icono,
+  CASE
+    WHEN ms.tipo_movimiento = 'Error' THEN 'error'
+    ELSE ($icono)
+  END            AS icono,
   ($tag)         AS tag
 FROM movimientos_saldo ms
 $joins
@@ -235,6 +238,7 @@ $filtroTipo
 $filtroQ
 ORDER BY ms.fecha DESC, ms.id_transaccion DESC
 ";
+
 
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(':actor', $actorId, PDO::PARAM_INT);

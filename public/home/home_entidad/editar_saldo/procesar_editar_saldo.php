@@ -89,10 +89,10 @@ try {
     }
 
     // --- Calcular diferencia ---
-    $diferencia = $nuevo_saldo - $saldo_anterior;
+    //$diferencia = $nuevo_saldo - $saldo_anterior;
 
     // Siempre registrar como "Error", aunque sea correcto
-    $monto_mov = abs($diferencia);
+    $monto_mov = abs($nuevo_saldo);
 
     $ins = $pdo->prepare("
         INSERT INTO movimientos_saldo

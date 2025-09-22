@@ -45,7 +45,8 @@ if ($usuario && !empty($usuario['id_entidad'])) {
 <html lang="es" translate="no">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
   <title>Home</title>
   <link rel="stylesheet" href="../styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -55,6 +56,12 @@ if ($usuario && !empty($usuario['id_entidad'])) {
     rel="stylesheet"
   />
   <style>
+    html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
     body {
       background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
     }
@@ -196,6 +203,7 @@ if ($usuario && !empty($usuario['id_entidad'])) {
       switch (name) {
         case 'bank': return '../img/bank.svg';
         case 'company': return '../img/company.svg';
+        case 'error': return '../img/bank.svg';
         default: return '../img/user.svg';
       }
     }
@@ -214,6 +222,7 @@ if ($usuario && !empty($usuario['id_entidad'])) {
 
         const data = await res.json();
         const items = Array.isArray(data.items) ? data.items : [];
+        console.log(items);
 
         if (items.length === 0) {
           listEl.innerHTML = `
@@ -266,8 +275,15 @@ if ($usuario && !empty($usuario['id_entidad'])) {
         pNombre.textContent = item.contraparte ?? '—';
 
         const pMonto = document.createElement('p');
-        pMonto.className = 'h4 ' + (item.montoSigned < 0 ? 'text--minus' : 'text--plus');
-        pMonto.textContent = fmtMonto(item.montoSigned ?? 0);
+        if (item.tag === 'error') {
+          // Caso especial para Error
+          pMonto.className = 'h4 text--neutral';
+          pMonto.textContent = '$' + (item.monto ?? 0).toLocaleString('es-AR', { maximumFractionDigits: 0 });
+        } else {
+          // Comportamiento normal
+          pMonto.className = 'h4 ' + (item.montoSigned < 0 ? 'text--minus' : 'text--plus');
+          pMonto.textContent = fmtMonto(item.montoSigned ?? 0);
+        }
 
         arriba.appendChild(pNombre);
         arriba.appendChild(pMonto);
@@ -299,6 +315,7 @@ if ($usuario && !empty($usuario['id_entidad'])) {
     }
 
     document.addEventListener('DOMContentLoaded', cargarMovimientos);
+    
   </script>
 </body>
 </html>

@@ -161,6 +161,7 @@ if ($entidad) {
         switch (name) {
           case 'bank': return '../../img/bank.svg';
           case 'company': return '../../img/company.svg';
+          case 'error' : return '../../img/bank.svg';
           default: return '../../img/user.svg';
         }
       }
@@ -241,8 +242,16 @@ if ($entidad) {
 
           const pMonto = document.createElement('p');
           const signed = Number(item.montoSigned) || 0;
-          pMonto.className = 'h4 ' + (signed < 0 ? 'text--minus' : 'text--plus');
-          pMonto.textContent = fmtMonto(signed);
+
+          if (item.tag === 'error') {
+            // Caso especial: Error → sin signo, estilo neutral
+            pMonto.className = 'h4 text--neutral';
+            pMonto.textContent = '$' + (item.monto ?? 0).toLocaleString('es-AR', { maximumFractionDigits: 0 });
+          } else {
+            // Normal: positivo/negativo
+            pMonto.className = 'h4 ' + (signed < 0 ? 'text--minus' : 'text--plus');
+            pMonto.textContent = fmtMonto(signed);
+          }
 
           arriba.appendChild(pNombre);
           arriba.appendChild(pMonto);
