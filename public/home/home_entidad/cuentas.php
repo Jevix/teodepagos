@@ -16,12 +16,12 @@ $pdo = $db->getConnection();
 $id_entidad = $_SESSION['id_entidad'];
 
 // Verificar el tipo de entidad y el tipo de usuario (miembro o no)
-$query = "
+$queryx = "
     SELECT e.tipo_entidad, u.tipo_usuario 
     FROM entidades e
     LEFT JOIN usuarios u ON u.id_entidad = e.id_entidad
     WHERE e.id_entidad = :id_entidad";
-$stmt = $pdo->prepare($query);
+$stmt = $pdo->prepare($queryx);
 $stmt->bindParam(':id_entidad', $id_entidad, PDO::PARAM_INT);
 $stmt->execute();
 $entidad = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -41,18 +41,25 @@ $search_query = isset($_GET['search']) ? $_GET['search'] : '';
 // Consulta para obtener los datos de entidades y usuarios con opción de búsqueda
 $query = "
     SELECT * FROM (
+        -- ENTIDADES (excluye bancos)
         SELECT nombre_entidad AS nombre, cuit AS identificador, saldo, tipo_entidad AS tipo
         FROM entidades
         WHERE (nombre_entidad LIKE :search OR cuit LIKE :search)
-          AND tipo_entidad <> 'Banco'             -- 🔴 excluir bancos
+          AND tipo_entidad <> 'Banco'
+
         UNION ALL
-        SELECT nombre_apellido AS nombre, dni AS identificador, saldo, 'usuario' AS tipo
-        FROM usuarios
-        WHERE nombre_apellido LIKE :search OR dni LIKE :search
+
+        -- USUARIOS (excluye miembros de bancos)
+        SELECT u.nombre_apellido AS nombre, u.dni AS identificador, u.saldo, 'usuario' AS tipo
+        FROM usuarios u
+        LEFT JOIN entidades e2 ON e2.id_entidad = u.id_entidad
+        WHERE (u.nombre_apellido LIKE :search OR u.dni LIKE :search)
+          AND (e2.id_entidad IS NULL OR e2.tipo_entidad <> 'Banco')
     ) AS cuentas_combinadas
     ORDER BY nombre ASC
     LIMIT :start_from, :results_per_page
 ";
+
 
 $stmt = $pdo->prepare($query);
 $search_term = "%$search_query%";

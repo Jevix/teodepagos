@@ -87,10 +87,20 @@ if (!isset($_SESSION['id_entidad'])) {
         pNombre.className = 'h5';
         pNombre.textContent = m.contraparte || '—';
 
-        const pMonto = document.createElement('p');
-        const signed = Number(m.montoSigned) || 0;
-        pMonto.className = 'h4 ' + (signed < 0 ? 'text--minus' : 'text--plus');
-        pMonto.textContent = fmtMontoSigned(signed);
+const pMonto = document.createElement('p');
+
+if (m.tag === 'error') {
+  // Caso especial para Error: sin signo, estilo neutral
+  pMonto.className = 'h4 text--neutral';
+  pMonto.textContent = '$' + (m.monto ?? 0).toLocaleString('es-AR', {
+    maximumFractionDigits: 0
+  });
+} else {
+  // Comportamiento normal
+  const signed = Number(m.montoSigned) || 0;
+  pMonto.className = 'h4 ' + (signed < 0 ? 'text--minus' : 'text--plus');
+  pMonto.textContent = fmtMontoSigned(signed);
+}
 
         arriba.appendChild(pNombre);
         arriba.appendChild(pMonto);
@@ -126,6 +136,8 @@ if (!isset($_SESSION['id_entidad'])) {
 
           const data = await res.json();
           const items = Array.isArray(data.items) ? data.items : [];
+
+          console.log(items);
 
           if (items.length === 0) {
             const p = document.createElement('p');

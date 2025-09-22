@@ -70,7 +70,7 @@ if ($for === 'entidad') {
     $descripcion = "CASE
                       WHEN ms.tipo_movimiento = 'Prestamo' THEN 'Préstamo'
                       WHEN ms.tipo_movimiento = 'Recarga'  THEN 'Recarga de saldo'
-                      WHEN ms.tipo_movimiento = 'Error'    THEN 'Ajuste aplicado'
+                      WHEN ms.tipo_movimiento = 'Error'    THEN 'Edición de saldo'
                       WHEN ms.id_destinatario_entidad = :actor THEN 'Transferencia recibida'
                       WHEN ms.id_remitente_entidad    = :actor THEN 'Transferencia enviada'
                       ELSE 'Movimiento'
@@ -132,7 +132,7 @@ if ($for === 'entidad') {
     $descripcion = "CASE
                       WHEN ms.tipo_movimiento = 'Prestamo' THEN 'Préstamo'
                       WHEN ms.tipo_movimiento = 'Recarga'  THEN 'Recarga de saldo'
-                      WHEN ms.tipo_movimiento = 'Error'    THEN 'Ajuste aplicado'
+                      WHEN ms.tipo_movimiento = 'Error'    THEN 'Edición de saldo'
                       WHEN ms.id_destinatario_usuario = :actor THEN 'Transferencia recibida'
                       WHEN ms.id_remitente_usuario    = :actor THEN 'Transferencia enviada'
                       ELSE 'Movimiento'

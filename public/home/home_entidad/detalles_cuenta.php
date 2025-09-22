@@ -194,7 +194,7 @@ gap: 10px;
           <div class="datos-transferencia">
             <p class="h2 text--light arreglo_titulo">Contraseña</p>
             <div class="right">
-              <p class="h2 text--darkblue" id="password"><?= str_repeat('**', strlen($cuenta['password'])); ?></p>
+              <p class="h2 text--darkblue" id="password"><?= '********' ?></p>
               <img src="../../img/censurado.svg" alt="Mostrar" id="mostrar" style="cursor:pointer" />
             </div>
           </div>
@@ -271,7 +271,7 @@ gap: 10px;
           password.textContent = textoOriginal;
         } else {
           icono.src = iconoCensurado;
-          password.textContent = "**".repeat(textoOriginal.length);
+          password.textContent = "********";
         }
         censurado = !censurado;
       });
