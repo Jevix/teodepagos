@@ -87,6 +87,43 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == 1) {
       body {
         background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
       }
+      .container-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 8px;
+  padding:20px 15px;
+  gap: 6px;
+  max-width: 320px;
+  height: 54px;
+  margin-bottom: 15px;
+}
+
+.container-input svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  stroke: #555;
+}
+
+.container-input input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+}
+#search{
+  padding: 0px;
+  color: #000;
+  font-family: Inter;
+  font-size: 19px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  line-height: normal !important;
+  letter-spacing: -0.57px !important;
+  height: 23px !important;
+}
     </style>
 </head>
 <body>
@@ -98,15 +135,20 @@ if (isset($_GET['ajax']) && $_GET['ajax'] == 1) {
         <p class="h2">Cuentas</p>
     </nav>
 
-    <div class="container-input">
-        <input
-            type="text"
-            name="search"
-            id="search"
-            placeholder="Busca por nombre,dni,cuit..."
-            oninput="filtrarCuentas()"
-        />
-    </div>
+<div class="container-input">
+  <svg viewBox="0 0 24 24" fill="none">
+    <path d="M11.5 21C16.7 21 21 16.7 21 11.5S16.7 2 11.5 2 2 6.3 2 11.5 6.3 21 11.5 21Z"
+      stroke="black" stroke-width="1.5"/>
+    <path d="M18.5 18.5L22 22" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>
+  <input
+    type="text"
+    name="search"
+    id="search"
+    placeholder="Busca por nombre, dni, cuit..."
+    oninput="filtrarCuentas()"
+  />
+</div>
 
     <div class="container-white container-buscar-cuentas" id="listaCuentas">
         <!-- Aquí es donde se insertarán las cuentas dinámicamente -->

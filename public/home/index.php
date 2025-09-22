@@ -143,9 +143,9 @@ if ($usuario && !empty($usuario['id_entidad'])) {
     <!-- MOVIMIENTOS -->
     <div class="movimientos">
       <p class="h2" id="h2">Movimientos</p>
-      <div id="movimientos-list" class="movimientos-container"></div>
-      <div class="container-btn">
-        <button id="btn-ver-mas" class="btn-primary" style="display:none;">Ver más</button>
+      <div id="movimientos-list" class="movimientos-container">
+        <!-- acá van los movimientos -->
+        <div id="container-btn" class="container-btn"></div>
       </div>
     </div>
 
@@ -182,109 +182,122 @@ if ($usuario && !empty($usuario['id_entidad'])) {
       window.location.href = '../logout.php';
     }
 
-    // --- HISTORIAL MOVIMIENTOS ---
-    let page = 1;
-    const pageSize = 10;
-    let loading = false;
-    let hasMore = true;
+    const VISIBLE_COUNT = 3;
+    const REQUEST_PAGE_SIZE = 50;
 
     const listEl = document.getElementById('movimientos-list');
-    const btnMas = document.getElementById('btn-ver-mas');
+    const containerBtn = document.getElementById('container-btn');
 
     function fmtMonto(n) {
       const abs = Math.abs(n);
-      return (n < 0 ? '-' : '+') + '$' + abs.toLocaleString('es-AR', {maximumFractionDigits:0});
+      return (n < 0 ? '-' : '+') + '$' + abs.toLocaleString('es-AR', { maximumFractionDigits: 0 });
     }
-
     function iconPath(name) {
-      switch(name){
+      switch (name) {
         case 'bank': return '../img/bank.svg';
         case 'company': return '../img/company.svg';
         default: return '../img/user.svg';
       }
     }
+    function fmtHoraSafe(fechaStr) {
+      try {
+        const d = new Date((fechaStr || '').replace(' ', 'T'));
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      } catch { return ''; }
+    }
 
     async function cargarMovimientos() {
-      if (loading || !hasMore) return;
-      loading = true;
       try {
-       const res = await fetch(`../api/movimientos.php?page=${page}&page_size=${pageSize}`, { credentials:'same-origin' });
+        const res = await fetch(`../api/movimientos.php?page=1&page_size=${REQUEST_PAGE_SIZE}`, { credentials: 'same-origin' });
         if (!res.ok) throw new Error('Error al cargar movimientos');
-        const data = await res.json();
 
-        if (page === 1 && (!data.items || data.items.length === 0)) {
+        const data = await res.json();
+        const items = Array.isArray(data.items) ? data.items : [];
+
+        if (items.length === 0) {
           listEl.innerHTML = `
             <div style="text-align:center;">
               <p class="h2 text--light">Todavía no tenés ningún movimiento.</p>
             </div>`;
-          btnMas.style.display = 'none';
-          hasMore = false;
           return;
         }
 
-        data.items.forEach(item => {
-          const wrap = document.createElement('div');
-          wrap.className = 'componente--movimiento';
+        // Render primeros 3
+        items.slice(0, VISIBLE_COUNT).forEach(renderMovimiento);
 
-          const left = document.createElement('div');
-          left.className = 'left';
-          const img = document.createElement('img');
-          img.src = iconPath(item.icon);
-          img.alt = 'Entidad';
-          left.appendChild(img);
+        // Agregar botón si hay más
+        const total = (typeof data.total === 'number') ? data.total : items.length;
+        if (total > VISIBLE_COUNT) {
+          const btnMas = document.createElement('button');
+          btnMas.className = "btn-primary";
+          btnMas.textContent = "Historial de movimientos";
+          btnMas.addEventListener('click', () => {
+            window.location.href = './movimientos.php';
+          });
+          containerBtn.appendChild(btnMas);
+        }
 
-          const right = document.createElement('div');
-          right.className = 'right';
-
-          const arriba = document.createElement('div');
-          arriba.className = 'arriba';
-
-          const pNombre = document.createElement('p');
-          pNombre.className = 'h5';
-          pNombre.textContent = item.contraparte;
-
-          const pMonto = document.createElement('p');
-          pMonto.className = 'h4 ' + (item.montoSigned < 0 ? 'text--minus' : 'text--plus');
-          pMonto.textContent = fmtMonto(item.montoSigned);
-
-          arriba.appendChild(pNombre);
-          arriba.appendChild(pMonto);
-
-          const abajo = document.createElement('div');
-          abajo.className = 'abajo';
-
-          const pDesc = document.createElement('p');
-          pDesc.className = 'hb';
-          pDesc.textContent = item.descripcion;
-
-          const pHora = document.createElement('p');
-          pHora.className = 'hb';
-          const d = new Date(item.fecha.replace(' ', 'T'));
-          pHora.textContent = d.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
-
-          abajo.appendChild(pDesc);
-          abajo.appendChild(pHora);
-
-          right.appendChild(arriba);
-          right.appendChild(abajo);
-
-          wrap.appendChild(left);
-          wrap.appendChild(right);
-
-          listEl.appendChild(wrap);
-        });
-
-        hasMore = data.has_more;
-        btnMas.style.display = hasMore ? 'inline-block' : 'none';
-        page += 1;
       } catch (e) {
         console.error(e);
-      } finally {
-        loading = false;
       }
     }
 
-    btnMas?.addEventListener('click', cargarMovimientos);
+    function renderMovimiento(item) {
+      try {
+        const wrap = document.createElement('div');
+        wrap.className = 'componente--movimiento';
+
+        const left = document.createElement('div');
+        left.className = 'left';
+        const img = document.createElement('img');
+        img.src = iconPath(item.icon);
+        img.alt = 'Entidad';
+        left.appendChild(img);
+
+        const right = document.createElement('div');
+        right.className = 'right';
+
+        const arriba = document.createElement('div');
+        arriba.className = 'arriba';
+
+        const pNombre = document.createElement('p');
+        pNombre.className = 'h5';
+        pNombre.textContent = item.contraparte ?? '—';
+
+        const pMonto = document.createElement('p');
+        pMonto.className = 'h4 ' + (item.montoSigned < 0 ? 'text--minus' : 'text--plus');
+        pMonto.textContent = fmtMonto(item.montoSigned ?? 0);
+
+        arriba.appendChild(pNombre);
+        arriba.appendChild(pMonto);
+
+        const abajo = document.createElement('div');
+        abajo.className = 'abajo';
+
+        const pDesc = document.createElement('p');
+        pDesc.className = 'hb';
+        pDesc.textContent = item.descripcion ?? 'Movimiento';
+
+        const pHora = document.createElement('p');
+        pHora.className = 'hb';
+        pHora.textContent = fmtHoraSafe(item.fecha);
+
+        abajo.appendChild(pDesc);
+        abajo.appendChild(pHora);
+
+        right.appendChild(arriba);
+        right.appendChild(abajo);
+
+        wrap.appendChild(left);
+        wrap.appendChild(right);
+
+        listEl.insertBefore(wrap, containerBtn);
+      } catch (e) {
+        console.warn('No se pudo renderizar un movimiento:', e);
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', cargarMovimientos);
   </script>
 </body>

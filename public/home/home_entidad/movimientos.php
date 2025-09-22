@@ -1,57 +1,12 @@
 <?php
-// Establecer la duración de la sesión antes de iniciarla
-$session_lifetime = 60 * 60 * 24 * 30; // 30 días
+// 30 días de sesión
+$session_lifetime = 60 * 60 * 24 * 30;
 session_set_cookie_params($session_lifetime);
-
-// Iniciar la sesión
 session_start();
 
-// Si la sesión no está activa, redirigir al login
 if (!isset($_SESSION['id_entidad'])) {
-    header('Location: ../login');  // Redirigir a la página de login si no está autenticado
-    exit;
-}
-
-if (isset($_SESSION['id_entidad'])) {
-    // Obtener el id_entidad de la sesión
-    $id_entidad = $_SESSION['id_entidad'];
-    $tipo_entidad = $_SESSION['tipo_entidad'];
-
-    // Conectar a la base de datos
-    require '../../../src/Models/Database.php';
-    $config = require '../../../config/config.php';
-    $db = new Database($config['db_host'], $config['db_name'], $config['db_user'], $config['db_pass']);
-    $pdo = $db->getConnection();
-
-    // Consultar la tabla entidades para obtener más información
-    $stmt = $pdo->prepare("SELECT * FROM entidades WHERE id_entidad = :id_entidad");
-    $stmt->execute(['id_entidad' => $id_entidad]);
-    $entidad = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($entidad) {
-        // Consultar los movimientos de saldo
-        $stmt = $pdo->prepare("
-        SELECT ms.*, 
-               COALESCE(remitente_entidad.nombre_entidad, remitente.nombre_apellido) AS remitente_nombre,
-               COALESCE(destinatario_entidad.nombre_entidad, destinatario.nombre_apellido) AS destinatario_nombre,
-               remitente_entidad.tipo_entidad AS remitente_tipo_entidad,
-               destinatario_entidad.tipo_entidad AS destinatario_tipo_entidad
-        FROM movimientos_saldo ms
-        LEFT JOIN entidades AS remitente_entidad ON ms.id_remitente_entidad = remitente_entidad.id_entidad
-        LEFT JOIN usuarios AS remitente ON ms.id_remitente_usuario = remitente.id_usuario
-        LEFT JOIN entidades AS destinatario_entidad ON ms.id_destinatario_entidad = destinatario_entidad.id_entidad
-        LEFT JOIN usuarios AS destinatario ON ms.id_destinatario_usuario = destinatario.id_usuario
-        WHERE ms.id_remitente_entidad = :id_entidad OR ms.id_destinatario_entidad = :id_entidad
-        ORDER BY ms.fecha DESC
-        ");
-        $stmt->execute(['id_entidad' => $id_entidad]);
-        $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        echo "<script>console.log('Entidad no encontrada');</script>";
-    }
-} else {
-    header('Location: ../login.php');
-    exit;
+  header('Location: ../../login');
+  exit;
 }
 ?>
 <!DOCTYPE html>
@@ -68,144 +23,127 @@ if (isset($_SESSION['id_entidad'])) {
       rel="stylesheet"
     />
     <style>
-      body {
-        background: linear-gradient(199deg, #324798 0%, #101732 65.93%);
-      }
+      body { background: linear-gradient(199deg, #324798 0%, #101732 65.93%); }
     </style>
   </head>
   <body>
     <section class="main movimientos">
       <nav class="navbar">
-        <a href="index.php">
+        <a href="./index.php">
           <img src="../../img/back.svg" alt="" />
         </a>
         <p class="h2">Movimientos</p>
       </nav>
+
       <div class="container-white">
-        <div class="historial">
+        <div class="historial" id="historial">
           <p class="hb">Hoy</p>
-
-          <!-- Mostrar movimientos desde la base de datos -->
-          <?php if ($movimientos): ?>
-              <?php foreach ($movimientos as $movimiento): ?>
-              <div class="componente--movimiento">
-                <div class="left">
-                  <?php
-                     if ($entidad['tipo_entidad'] === 'Banco') {
-
-                      $img_src = '../../img/bank.svg';
-                      //si el movimiento remitente banco a destianraio empresa mostrar logo empresa
-                      if ($movimiento['remitente_tipo_entidad'] === 'Banco' && $movimiento['destinatario_tipo_entidad'] === 'Empresa') {
-                          $img_src = '../../img/company.svg';
-                      }
-
-                      if ($movimiento['remitente_tipo_entidad'] === 'Banco' && $movimiento['destinatario_tipo_entidad'] === NULL) {
-                          $img_src = '../../img/user.svg';
-                      }
-
-                      if ($movimiento['remitente_tipo_entidad'] === 'Banco' && $movimiento['destinatario_tipo_entidad'] === 'Banco') {
-                          $img_src = '../../img/bank.svg';
-                      }
-                      
-        
-                  } elseif ($entidad['tipo_entidad'] === 'Empresa') {
-         
-                    $img_src = '../../img/user.svg';
-                    if ($movimiento['remitente_tipo_entidad'] === NULL && $movimiento['destinatario_tipo_entidad'] === 'Empresa') {
-                       $img_src = '../../img/user.svg';
-                   }else{
-                       $img_src = '../../img/company.svg';
-                   }
-                     if ($movimiento['tipo_movimiento'] === 'Recarga' || $movimiento['tipo_movimiento'] === 'Prestamo') {
-                         $img_src = '../../img/bank.svg';
-                     }
-                     if ($movimiento['destinatario_tipo_entidad'] == 'Banco' || $movimiento['remitente_tipo_entidad'] == 'Banco') {
-                         $img_src = '../../img/bank.svg';
-                     }//si yo empresa le tranfiero a otra empresa tiene que figurar logo empresa
-                     
-                     if ($movimiento['destinatario_tipo_entidad'] == NULL ) {
-                         $img_src = '../../img/user.svg';
-                     }
-
-                     
-                     
-                  }
-                  ?>
-                  <img src="<?php echo htmlspecialchars($img_src); ?>" alt="Entidad" />
-                </div>
-                <div class="right">
-                  <div class="arriba">
-                    <p class="h5">
-                      <?php
-                        // Mostrar el nombre del remitente o destinatario dependiendo de la entidad
-                        if ($movimiento['id_remitente_entidad'] == $id_entidad) {
-                            echo htmlspecialchars($movimiento['destinatario_nombre']);
-                        } else {
-                            echo htmlspecialchars($movimiento['remitente_nombre']);
-                        }
-                      ?>
-                    </p>
-                    <p class="h4 <?php 
-                    if ($movimiento['tipo_movimiento'] == 'Error') {
-                           $clase_css = 'text--minus'; // Aplicar 'text--minus' si es un Error
-                           echo $clase_css;
-                        }else{
-                       
-                        if ($tipo_entidad === 'Banco') {
-                            $clase_css = 'text--plus'; // Aplicar 'text--minus' si es un Error
-                            echo $clase_css;
-                          }else{
-                           echo ($movimiento['id_remitente_entidad'] == $id_entidad) ? 'text--minus' : 'text--plus';    
-                          }
-                             
-                        }?>">
-                      <?php
-                        if ($movimiento['tipo_movimiento'] == 'Prestamo') {
-                          $descripcion_movimiento = "Préstamo";
-                          $signo = "+";
-                      } elseif ($movimiento['tipo_movimiento'] == 'Recarga') {
-                          $descripcion_movimiento = "Recarga de saldo";
-                          $signo = "+";
-                      } elseif ($movimiento['tipo_movimiento'] == 'Error') {
-                          $descripcion_movimiento = "Error Bancario";
-                          $signo = "-";
-                      } elseif ($movimiento['id_remitente_entidad'] == $id_entidad) {
-                          $descripcion_movimiento = "Transferencia enviada";
-                          $signo = "-";
-                      } else {
-                          $descripcion_movimiento = "Transferencia recibida";
-                          $signo = "+";
-                      }     
-                        echo $signo . "$" . number_format(abs($movimiento['monto']), 0, ',', '.');
-                      ?>
-                    </p>
-                  </div>
-                  <div class="abajo">
-                    <p class="hb">
-                      <?php
-                        // Mostrar el tipo de movimiento
-                       
-                        echo htmlspecialchars($descripcion_movimiento);
-                      ?>
-                    </p>
-                    <p class="hb">
-                      <?php
-                        // Mostrar la hora del movimiento
-                        $fecha = new DateTime($movimiento['fecha']);
-                        echo $fecha->format('H:i');
-                      ?>
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <?php endforeach; ?>
-          <?php else: ?>
-              <p>No tienes movimientos todavía.</p>
-          <?php endif; ?>
-
+          <!-- Los movimientos se inyectan abajo por JS, mismo markup que antes -->
         </div>
         <div class="background"></div>
       </div>
     </section>
+
+    <script>
+      const historial = document.getElementById('historial');
+
+      function iconPath(name) {
+        switch (name) {
+          case 'bank': return '../../img/bank.svg';
+          case 'company': return '../../img/company.svg';
+          default: return '../../img/user.svg';
+        }
+      }
+      function fmtMontoSigned(n) {
+        const v = Number(n) || 0;
+        const abs = Math.abs(v);
+        return (v < 0 ? '-' : '+') + '$' + abs.toLocaleString('es-AR', { maximumFractionDigits: 0 });
+      }
+      function fmtHora(fechaStr) {
+        try {
+          const d = new Date(String(fechaStr || '').replace(' ', 'T'));
+          if (isNaN(d.getTime())) return '';
+          return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        } catch { return ''; }
+      }
+      function renderMovimiento(m) {
+        // <div class="componente--movimiento"> … </div>
+        const wrap = document.createElement('div');
+        wrap.className = 'componente--movimiento';
+
+        const left = document.createElement('div');
+        left.className = 'left';
+        const img = document.createElement('img');
+        img.src = iconPath(m.icon);
+        img.alt = 'Entidad';
+        left.appendChild(img);
+
+        const right = document.createElement('div');
+        right.className = 'right';
+
+        const arriba = document.createElement('div');
+        arriba.className = 'arriba';
+        const pNombre = document.createElement('p');
+        pNombre.className = 'h5';
+        pNombre.textContent = m.contraparte || '—';
+
+        const pMonto = document.createElement('p');
+        const signed = Number(m.montoSigned) || 0;
+        pMonto.className = 'h4 ' + (signed < 0 ? 'text--minus' : 'text--plus');
+        pMonto.textContent = fmtMontoSigned(signed);
+
+        arriba.appendChild(pNombre);
+        arriba.appendChild(pMonto);
+
+        const abajo = document.createElement('div');
+        abajo.className = 'abajo';
+        const pDesc = document.createElement('p');
+        pDesc.className = 'hb';
+        pDesc.textContent = m.descripcion || 'Movimiento';
+
+        const pHora = document.createElement('p');
+        pHora.className = 'hb';
+        pHora.textContent = fmtHora(m.fecha);
+
+        abajo.appendChild(pDesc);
+        abajo.appendChild(pHora);
+
+        right.appendChild(arriba);
+        right.appendChild(abajo);
+
+        wrap.appendChild(left);
+        wrap.appendChild(right);
+
+        historial.appendChild(wrap);
+      }
+
+      async function cargarMovimientos() {
+        try {
+          // Lee la API para ENTIDAD
+          const url = `../../api/movimientos.php?for=entidad&page=1&page_size=1000`;
+          const res = await fetch(url, { credentials: 'same-origin' });
+          if (!res.ok) throw new Error('Error API');
+
+          const data = await res.json();
+          const items = Array.isArray(data.items) ? data.items : [];
+
+          if (items.length === 0) {
+            const p = document.createElement('p');
+            p.textContent = 'No tienes movimientos todavía.';
+            historial.appendChild(p);
+            return;
+          }
+
+          items.forEach(renderMovimiento);
+        } catch (e) {
+          console.error(e);
+          const p = document.createElement('p');
+          p.textContent = 'No se pudieron cargar los movimientos.';
+          historial.appendChild(p);
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', cargarMovimientos);
+    </script>
   </body>
 </html>

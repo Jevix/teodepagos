@@ -5,6 +5,8 @@
   --background-gradient: linear-gradient(199deg, #324798 0%, #101732 65.93%);
 }
 
+
+
 /* ESTILOS GLOBALES */
 
 html {
@@ -819,6 +821,7 @@ input:focus {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
 }
 
 .container-datos div .left {
@@ -998,13 +1001,13 @@ input:focus {
   width: 100%;
   box-sizing: border-box;
   position: relative;
-  padding: 15px 16px;
+  /* padding: 15px 16px; */
 }
 
 .main .container-input input {
-  background: url("../img/search.svg") no-repeat 20px center;
+
   background-color: white;
-  padding-left: 55px;
+
   width: 100%;
 }
 
@@ -1179,4 +1182,18 @@ input:focus {
   flex-direction: column; 
   align-items: center;
   
+}
+p#h2.h2{
+  color: black !important;
+}
+
+
+.container-btn{
+      z-index: 100;
+}
+
+.arreglo-boton{
+  border-radius: 5px;
+background: #1B72BA;
+margin:0;
 }
