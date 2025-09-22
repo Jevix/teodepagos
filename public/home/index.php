@@ -227,7 +227,7 @@ if ($usuario && !empty($usuario['id_entidad'])) {
         if (items.length === 0) {
           listEl.innerHTML = `
             <div style="text-align:center;">
-              <p class="h2 text--light">Todavía no tenés ningún movimiento.</p>
+              <p class="h2 text--light">Todavía no realizaste ninguna transferencia.</p>
             </div>`;
           return;
         }

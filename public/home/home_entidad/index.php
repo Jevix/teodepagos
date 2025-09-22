@@ -140,6 +140,11 @@ if ($entidad) {
     </section>
 
     <script>
+  const tipo_entidad = <?= json_encode($entidad['tipo_entidad'] ?? null) ?>;
+</script>
+
+
+    <script>
       function showLoaderAndRedirect(url) {
         const loader = document.getElementById('loader');
         loader.style.display = 'flex';
@@ -186,9 +191,13 @@ if ($entidad) {
 
           // Empty state
           if (items.length === 0) {
+            const msg = (tipo_entidad === 'Banco')
+              ? 'Todavía no se realizó ningún movimiento desde este banco.'
+              : 'Todavía no realizaste ninguna transferencia.';
+
             listEl.innerHTML = `
               <div style="text-align:center;">
-                <p class="h2 text--light">Todavía no tenés ningún movimiento.</p>
+                <p class="h2 text--light">${msg}</p>
               </div>`;
             return;
           }
